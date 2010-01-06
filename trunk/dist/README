@@ -1,0 +1,21 @@
+Application: LSD - Lineage Signature Discovery
+
+Author: Diogo Costa <costa.h4evr@gmail.com>
+
+---------------- INSTALLATION --------------------
+
+This application requires no specific installation 
+procedure as it is a standalone application.
+
+You can put it wherever you want, for example, you
+can put it in the /usr/bin/ folder for it to 
+became accessible system-wide.
+
+To start the application, double-click over it's
+icon, or type:
+
+    ./LSD
+    
+on a terminal.
+
+
