@@ -79,12 +79,16 @@ sub outputFilePrefix
 sub filePositive
 {
     my ($self) = @_;
+    #return "/home/h4evr/IBMC/Refactored/proteins2000.fasta";
+    #return "/home/h4evr/IBMC/Refactored/pos_file_test.fasta";
     return $self->{_filePositive}->get_filename();
 }
 
 sub fileNegative
 {
     my ($self) = @_;
+    #return "/home/h4evr/IBMC/Refactored/retrovirus5000.fasta";
+    #return "/home/h4evr/IBMC/Refactored/neg_file_test.fasta";
     return $self->{_fileNegative}->get_filename();
 }
 
@@ -92,6 +96,9 @@ sub fileNegative
 sub run
 {
     my ($self) = @_;
+    
+    #return 1;
+    
     if( 'ok' eq $self->{_frmNewSession}->run() )
     {
         $self->{_frmNewSession}->hide;

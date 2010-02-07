@@ -5,8 +5,8 @@
   <object class="GtkWindow" id="frmRunCommand">
     <property name="title" translatable="yes">Running...</property>
     <property name="window_position">center</property>
-    <property name="default_width">250</property>
-    <property name="default_height">250</property>
+    <property name="default_width">640</property>
+    <property name="default_height">480</property>
     <child>
       <object class="GtkHBox" id="hbox1">
         <property name="visible">True</property>

@@ -73,17 +73,10 @@ sub alignFile
     $self->{_frmTCoffee}->show();
 }
 
-sub on_btnStartRegular_clicked
+sub do_it
 {
-    my ($btn, $self) = @_;
-
-    my $useProfiles = $self->{_chkProfiles}->get_active;
-
-    my %params = ('mode'    => lc($self->{_builder}->get_object("cmbRegularComputationMode")->get_active_text),
-                  '-maxnseq' => $self->{_builder}->get_object("spinRegularMaxNumSequences")->get_value,
-                  '-maxlen'  => $self->{_builder}->get_object("spinMaximumLengthSequences")->get_value
-                  );
-
+    my ($self, $useProfiles, %params) = @_;
+    
     if($useProfiles)                     
     {
         my $cmd = 't_coffee ';
@@ -126,6 +119,93 @@ sub on_btnStartRegular_clicked
     }
 }
 
+sub on_btnStartRegular_clicked
+{
+    my ($btn, $self) = @_;
+
+    my $useProfiles = $self->{_chkProfiles}->get_active;
+
+    my %params = ('mode'    => lc($self->{_builder}->get_object("cmbRegularComputationMode")->get_active_text),
+                  '-maxnseq' => $self->{_builder}->get_object("spinRegularMaxNumSequences")->get_value,
+                  '-maxlen'  => $self->{_builder}->get_object("spinMaximumLengthSequences")->get_value
+                  );
+
+    $self->do_it($useProfiles, %params);
+}
+
+sub on_btnStartAdvanced_clicked
+{
+    my ($btn, $self) = @_;
+    
+    my $useProfiles = $self->{_chkProfiles}->get_active;
+
+    my %params = ();
+    
+    $params{'mode'} = lc($self->{_builder}->get_object("cmbAdvancedComputationMode1")->get_active_text);
+        
+        
+    $params{'-maxnseq'} = $self->{_builder}->get_object("spinAdvancedMaxNumSequences")->get_value;
+    $params{'-maxlen'}  = $self->{_builder}->get_object("spinAdvancedMaximumLengthSequences")->get_value;
+                  
+    my $modeStr = "";
+    for(my $i = 0; $i < 6; ++$i)
+    {
+        my $obj = $self->{_builder}->get_object("PairwiseMethods[$i]");
+        
+        if($obj->get_active)
+        {
+            $modeStr .= "," if length($modeStr) > 0;
+            $modeStr .= $obj->get_label;
+        }
+    }    
+
+    for(my $i = 0; $i < 4; ++$i)
+    {
+        my $obj = $self->{_builder}->get_object("PairwiseStructuralMethods[$i]");
+        
+        if($obj->get_active)
+        {
+            $modeStr .= "," if length($modeStr) > 0;
+            $modeStr .= $obj->get_label;
+        }
+    }
+    
+    $params{'-in'} = $modeStr if(length($modeStr) > 0);
+    
+    $modeStr = "";
+    for(my $i = 0; $i < 8; ++$i)
+    {
+        my $obj = $self->{_builder}->get_object("MultipleMethods[$i]");
+        
+        if($obj->get_active)
+        {
+            $modeStr .= "," if length($modeStr) > 0;
+            $modeStr .= $obj->get_label;
+        }
+    }
+    
+    $params{'-method'} = $modeStr if(length($modeStr) > 0);
+
+    $modeStr = "";
+    for(my $i = 0; $i < 11; ++$i)
+    {
+        my $obj = $self->{_builder}->get_object("AlignmentFormat[$i]");
+        
+        if($obj->get_active)
+        {
+            $modeStr .= "," if length($modeStr) > 0;
+            $modeStr .= $obj->get_label;
+        }
+    }
+    
+    $params{'-output'} = $modeStr if(length($modeStr) > 0);
+    
+    $params{'-case'} = lc($self->{_builder}->get_object("cmbAdvancedCase")->get_active_text);
+    $params{'-seqnos'} = lc($self->{_builder}->get_object("cmbAdvancedResidueNumber")->get_active_text);
+    
+    $self->do_it($useProfiles, %params);
+}
+
 sub process_out_file
 {
     my ($callback, $outfile, $posFile, $negFile, $cntPos, $cntNeg, $self) = @_;
@@ -160,11 +240,6 @@ sub process_out_file
     }
     
     &{$callback}($posSeqs, $negSeqs);
-}
-
-sub on_btnStartAdvanced_clicked
-{
-    my ($btn, $self) = @_;
 }
 
 1;

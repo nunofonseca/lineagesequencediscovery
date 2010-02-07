@@ -97,7 +97,7 @@ sub init
     $scrollPosFile->add($self->{_txtPosFile});
     addStyleTags($self->{_bufferPos});
     $self->{_txtPosFile}->set_marker_pixbuf('patternmatch', $markerPixBuf);
-    $self->{_txtPosFile}->set_show_line_numbers(1);
+    $self->{_txtPosFile}->set_show_line_numbers(1); 
     $self->{_txtPosFile}->set_show_line_markers(1);
     $self->{_txtPosFile}->set_editable(1);
     $self->{_txtPosFile}->modify_font($font);
@@ -149,6 +149,22 @@ sub run
     my ($self) = @_;
     $self->show();
     Gtk2->main();
+}
+
+sub jumpToLine
+{
+    my ($self, $view, $line) = @_;
+    
+    if($view eq 'pos')
+    {
+        $textview = $self->{_txtPosFile};
+    }else
+    {
+        $textview = $self->{_txtNegFile};
+    }
+    
+    my ($iter, $linetop) = $textview->get_buffer()->get_iter_at_line($line);
+    $textview->scroll_to_iter($iter, 0, 1, 0.0, 0.0);    
 }
 
 sub showSequencesOnBuffer
@@ -474,6 +490,15 @@ sub clearBuffer
 sub error($)
 {
     $diag = Gtk2::MessageDialog::new(undef, $window, 'destroy-with-parent', 'error', 'ok', "%s", $_[0] );
+    $diag->run;
+    $diag->destroy;
+}
+
+# Shows an info dialog. 
+# One argument: message to show.
+sub info($)
+{
+    $diag = Gtk2::MessageDialog::new(undef, $window, 'destroy-with-parent', 'info', 'ok', "%s", $_[0] );
     $diag->run;
     $diag->destroy;
 }

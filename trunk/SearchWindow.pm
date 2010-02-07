@@ -68,6 +68,7 @@ sub new
     $self->{_builder}->get_object("btnImportPatterns")->signal_connect(clicked => \&on_btnImportPatterns_clicked, $self);
     $self->{_treePosRes}->get_selection()->signal_connect(changed => \&on_treePosRes_selection_on_changed, $self);
     $self->{_treeNegRes}->get_selection()->signal_connect(changed => \&on_treeNegRes_selection_on_changed, $self);
+    $self->{_builder}->get_object("treePatterns")->get_selection()->signal_connect(changed => \&on_treePattern_selection_on_changed, $self);
     
     my %statControlsTrain = 
     (
@@ -123,7 +124,7 @@ sub on_btnImportPatterns_clicked
     my ($sender, $self) = @_;
     
     my $diag = Gtk2::FileChooserDialog->new('Choose pat file', $window, 'open', 'Cancel' => 'cancel', 'Open' => 'ok');
-
+    
     if( $diag->run eq 'ok')
     {
         my $filename = $diag->get_filename;
@@ -272,25 +273,31 @@ sub find_matches_on_sequences
     my %patternToColumn;
     my $maxPatterns = 0;
 
+    my $renderer2 = Gtk2::CellRendererText->new;
+    $tree->insert_column_with_attributes(-1, 'SeqNum', $renderer2, text => 0);
+    
     foreach $p (keys %{$self->{_patterns}})
     {
         next if not $self->{_patterns}{$p}{'search'};
         my $renderer = Gtk2::CellRendererText->new;
+        ++$maxPatterns;
         $tree->insert_column_with_attributes(-1, $p, $renderer, text => $maxPatterns);
         $patternToColumn{$p} = $maxPatterns;
-        ++$maxPatterns;
     }
     
-    my $renderer2 = Gtk2::CellRendererText->new;
-    $tree->insert_column_with_attributes(-1, 'SeqNum', $renderer2, text => $maxPatterns);
     $renderer2 = Gtk2::CellRendererText->new;
     $tree->insert_column_with_attributes(-1, 'Header', $renderer2, text => $maxPatterns+1);
     
+    $renderer2 = Gtk2::CellRendererText->new;
+    $tree->insert_column_with_attributes(-1, 'Sequence', $renderer2, text => $maxPatterns+2);
+    
     my @tmpList;
-    for $i (0..$maxPatterns-1)
+    push(@tmpList, Glib::Int);
+    
+    for $i (1..$maxPatterns)
     { push(@tmpList, Glib::Int); }
     
-    push(@tmpList, Glib::Int);
+    push(@tmpList, Glib::String);
     push(@tmpList, Glib::String);
     
     if($seqType eq 'positive')
@@ -346,7 +353,7 @@ sub find_matches_on_sequences
         {
             my $iter = $model->append(undef);
             
-            for $j (0..$maxPatterns-1)
+            for $j (1..$maxPatterns)
             { $model->set($iter, $j => 0); }
             
             for $p (@matches)
@@ -357,8 +364,9 @@ sub find_matches_on_sequences
                 $model->set($iter, $col => $val);
             }
             
-            $model->set($iter, $maxPatterns => $i+1);
+            $model->set($iter, 0 => $i+1);
             $model->set($iter, $maxPatterns+1 => $seq{'header'});
+            $model->set($iter, $maxPatterns+2 => $seq{'seq'});
             
             ++$countPatternsWithMatches;
         }
@@ -384,6 +392,166 @@ sub on_btnFindPattern_clicked
     find_matches_on_sequences($self, 'negative', $typeSearch);
 }
 
+sub exportPatternsARFF
+{
+    my ($self, $filename) = @_;
+    
+    my $outfile = new ARFF;
+        
+    $outfile->relation("Patterns: stats and search methods");
+            
+    $outfile->addAttribute('name', 'string');
+    $outfile->addAttribute('pattern', 'string');
+    
+    $outfile->addAttribute('trainnumMatchesPos', 'numeric');
+    $outfile->addAttribute('trainnumMatchesNeg', 'numeric');
+    $outfile->addAttribute('trainrecallPos', 'numeric');
+    $outfile->addAttribute('trainrecallNeg', 'numeric');
+    $outfile->addAttribute('trainprecision', 'numeric');
+    $outfile->addAttribute('trainfMeasure', 'numeric');
+    $outfile->addAttribute('trainstdDevPos', 'numeric');
+    $outfile->addAttribute('trainstdDevNeg', 'numeric');
+    
+    $outfile->addAttribute('testnumMatchesPos', 'numeric');
+    $outfile->addAttribute('testnumMatchesNeg', 'numeric');
+    $outfile->addAttribute('testrecallPos', 'numeric');
+    $outfile->addAttribute('testrecallNeg', 'numeric');
+    $outfile->addAttribute('testprecision', 'numeric');
+    $outfile->addAttribute('testfMeasure', 'numeric');
+    $outfile->addAttribute('teststdDevPos', 'numeric');
+    $outfile->addAttribute('teststdDevNeg', 'numeric');
+    
+    $outfile->addAttribute('search', 'numeric');
+    $outfile->addAttribute('not', 'numeric');
+    
+    for $p (keys %{ $self->{_patterns} })
+    {
+        next if not $self->{_patterns}{$p}{'search'};
+        
+        my @data;
+        
+        push @data, $self->{_patterns}{$p}{'pattern'}->name;
+        push @data, $self->{_patterns}{$p}{'pattern'}->pattern;
+        
+        my %patStatsTrain = %${$self->{_patterns}{$p}{'pattern'}->trainData};
+        my %patStatsTest = %${$self->{_patterns}{$p}{'pattern'}->testData};
+        
+        foreach $k (keys %patStatsTrain)
+        {
+            push @data, $patStatsTrain{$k};
+        }
+        
+        foreach $k (keys %patStatsTest)
+        {
+            push @data, $patStatsTest{$k};
+        }
+        
+        push @data, $self->{_patterns}{$p}{'search'};
+        push @data, $self->{_patterns}{$p}{'not'};
+        
+        $outfile->addData([@data]);
+    }
+    
+    $outfile->writeFile($filename);
+}
+
+sub exportResultsARFF
+{
+    my ($self, $filename, $patfilename) = @_;
+    
+    my $outfile = new ARFF;
+    $outfile->relation("Pattern search results");
+    
+    $outfile->addComment("Positive file: " . $self->{_seqViewer}->positiveFile);
+    $outfile->addComment("Negative file: " . $self->{_seqViewer}->negativeFile);
+    $outfile->addComment("Patterns file: " . $patfilename);
+    
+    $outfile->addAttribute('positive', 'numeric');
+    
+    @columns = $self->{_treePosRes}->get_columns();
+    pop @columns;
+    pop @columns;
+    
+    foreach $column (@columns)
+    { 
+        $outfile->addAttribute($column->get_title, 'numeric');
+    }
+    
+    $outfile->addAttribute('Header', 'string');
+    $outfile->addAttribute('Sequence', 'string');
+    
+    my $model = $self->{_treePosRes}->get_model;
+    my $iter = $model->get_iter_first();
+    while($iter)
+    {
+        my @data = (1, $model->get($iter));
+        $outfile->addData([@data]);
+        $iter = $model->iter_next($iter);
+    }
+    
+    $model = $self->{_treeNegRes}->get_model;
+    $iter = $model->get_iter_first();
+    while($iter)
+    {
+        my @data = (0, $model->get($iter));
+        $outfile->addData([@data]);
+        $iter = $model->iter_next($iter);
+    }
+                    
+    $outfile->writeFile($filename);
+}
+
+sub exportResultsCSV
+{
+    my ($self, $filename, $patfilename) = @_;
+    
+    open $outfile, ">$filename";
+            
+    @columns = $self->{_treePosRes}->get_columns();
+    
+    printf $outfile ("Positive file:,%s\n", $self->{_seqViewer}->positiveFile);
+    printf $outfile ("Negative file:,%s\n", $self->{_seqViewer}->negativeFile);    
+    printf $outfile ("Patterns file:,%s\n\n", $patfilename);  
+    
+    my $columnsHeader = ",";
+    foreach $column (@columns)
+    { 
+        $columnsHeader .= "," . $column->get_title;
+    }
+    
+    print $outfile (",,Positive Matches\n");
+    print $outfile ("$columnsHeader\n");
+        
+    my $model = $self->{_treePosRes}->get_model;
+    my $iter = $model->get_iter_first();
+    while($iter)
+    {
+        my $out = ",";
+        my @data = $model->get($iter);
+        foreach $val (@data) { $out .= "," . $val; }
+        print $outfile ("$out\n");
+        $iter = $model->iter_next($iter);
+    }
+    
+    print $outfile ("\n,,Negative Matches\n");
+    print $outfile ("$columnsHeader\n");
+    
+    $model = $self->{_treeNegRes}->get_model;
+    $iter = $model->get_iter_first();
+    while($iter)
+    {
+        my $out = ",";
+        my @data = $model->get($iter);
+        foreach $val (@data) { $out .= "," . $val; }
+        print $outfile ("$out\n");
+        $iter = $model->iter_next($iter);
+    }
+    
+    print $outfile ("\n");
+                    
+    close $outfile;
+}
+
 sub on_btnExportPatterns_clicked
 {
     my ($sender, $self) = @_;
@@ -393,65 +561,27 @@ sub on_btnExportPatterns_clicked
     if( $diag->run eq 'ok')
     {
         my $filename = $diag->get_filename;
-       
-        my $outfile = new ARFF;
+        $diag->destroy;
         
-        $outfile->relation("Patterns: stats and search methods");
-                
-        $outfile->addAttribute('name', 'string');
-        $outfile->addAttribute('pattern', 'string');
-        
-        $outfile->addAttribute('trainnumMatchesPos', 'numeric');
-        $outfile->addAttribute('trainnumMatchesNeg', 'numeric');
-        $outfile->addAttribute('trainrecallPos', 'numeric');
-        $outfile->addAttribute('trainrecallNeg', 'numeric');
-        $outfile->addAttribute('trainprecision', 'numeric');
-        $outfile->addAttribute('trainfMeasure', 'numeric');
-        $outfile->addAttribute('trainstdDevPos', 'numeric');
-        $outfile->addAttribute('trainstdDevNeg', 'numeric');
-        
-        $outfile->addAttribute('testnumMatchesPos', 'numeric');
-        $outfile->addAttribute('testnumMatchesNeg', 'numeric');
-        $outfile->addAttribute('testrecallPos', 'numeric');
-        $outfile->addAttribute('testrecallNeg', 'numeric');
-        $outfile->addAttribute('testprecision', 'numeric');
-        $outfile->addAttribute('testfMeasure', 'numeric');
-        $outfile->addAttribute('teststdDevPos', 'numeric');
-        $outfile->addAttribute('teststdDevNeg', 'numeric');
-        
-        $outfile->addAttribute('search', 'numeric');
-        $outfile->addAttribute('not', 'numeric');
-        
-        for $p (keys %{ $self->{_patterns} })
+        if($filename =~ m/(.+)\.arff$/i)
         {
-            my @data;
-            
-            push @data, $self->{_patterns}{$p}{'pattern'}->name;
-            push @data, $self->{_patterns}{$p}{'pattern'}->pattern;
-            
-            my %patStatsTrain = %${$self->{_patterns}{$p}{'pattern'}->trainData};
-            my %patStatsTest = %${$self->{_patterns}{$p}{'pattern'}->testData};
-            
-            foreach $k (keys %patStatsTrain)
-            {
-                push @data, $patStatsTrain{$k};
-            }
-            
-            foreach $k (keys %patStatsTest)
-            {
-                push @data, $patStatsTest{$k};
-            }
-            
-            push @data, $self->{_patterns}{$p}{'search'};
-            push @data, $self->{_patterns}{$p}{'not'};
-            
-            $outfile->addData([@data]);
+            my $basename = $1;
+            $self->exportPatternsARFF($basename . ".pat.arff");
+            $self->exportResultsARFF($filename, $basename . ".pat.arff");
+            SequencesViewer::info("ARFF exportation successful!");
+        }elsif($filename =~ m/(.+)\.csv$/i)
+        {
+            my $basename = $1;
+            $self->exportPatternsARFF($basename . ".pat.arff");
+            $self->exportResultsCSV($filename, $basename . ".pat.arff");
+            SequencesViewer::info("CSV exportation successful!");
+        }else
+        {
+            SequencesViewer::error("Invalid extension! Valid extensions: arff, csv.");
         }
+    }else
+    { $diag->destroy; }
         
-        $outfile->writeFile($filename);
-    }
-    
-    $diag->destroy;
     
     return;
 }
@@ -459,18 +589,26 @@ sub on_btnExportPatterns_clicked
 sub on_treePosRes_selection_on_changed
 {
     my ($selection, $self) = @_;
-
-    my $model = $self->{_treePosRes}->get_model();
-    my $selected = $selection->get_selected();
+    my ($model, $selected) = $selection->get_selected();  
     
-    my $patName = $model->get_value($selected, 0);
+    return if not defined($model) or not defined($selected);
     
-
+    my $seqNum = $model->get_value($selected, 0) - 1;
+    
+    $self->{_seqViewer}->jumpToLine('pos', $seqNum);
+    
 }
 
 sub on_treeNegRes_selection_on_changed
 {
-
+    my ($selection, $self) = @_;
+    my ($model, $selected) = $selection->get_selected();  
+    
+    return if not defined($model) or not defined($selected);
+    
+    my $seqNum = $model->get_value($selected, 0) - 1;
+    
+    $self->{_seqViewer}->jumpToLine('neg', $seqNum);
 }
 
 1;

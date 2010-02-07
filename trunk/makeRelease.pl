@@ -94,6 +94,6 @@ chmod(0755, "$OUTPUTDIR/$APPNAME");
 print("Done!\n");
 
 print("Cleaning temporary directory...\n");
-system("rm -rf \"$TEMPDIR\"");
+#system("rm -rf \"$TEMPDIR\"");
 print("Done!\n");
 

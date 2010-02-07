@@ -18,7 +18,8 @@ sub new
     {
         relation => "",
         attributes => [],
-        data => []
+        data => [],
+        comments => []
     };
     
     bless $self, $class;
@@ -44,6 +45,13 @@ sub addAttribute
     $attrib->{'type'} = $attribType;
     
     push @{ $self->{attributes} }, $attrib;
+    return;
+}
+
+sub addComment
+{
+    my ($self, $cmt) = @_;   
+    push @{ $self->{comments} }, $cmt;
     return;
 }
 
@@ -142,8 +150,16 @@ sub writeFile
         return;
     }
     
+    # Write comments
+    my @cmts = @{ $self->{comments} };
+    
+    for $a (@cmts)
+    {     
+        printf $fh ("%% %s\n", $a);
+    }
+        
     # Write relation
-    printf $fh ("\@RELATION %s\n\n", $self->{relation});
+    printf $fh ("\n\@RELATION %s\n\n", $self->{relation});
     
     # Write attributes
     my @attribs = @{ $self->{attributes} };
