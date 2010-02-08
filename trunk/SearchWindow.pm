@@ -126,8 +126,10 @@ sub on_btnImportPatterns_clicked
     my $diag = Gtk2::FileChooserDialog->new('Choose pat file', $window, 'open', 'Cancel' => 'cancel', 'Open' => 'ok');
     
     if( $diag->run eq 'ok')
+    #if(1)
     {
         my $filename = $diag->get_filename;
+        #my $filename = "/home/h4evr/IBMC/Refactored/retrovirus5000.fasta.pat";
         
         my $patManager = new PatternManager;
         
@@ -325,14 +327,26 @@ sub find_matches_on_sequences
         my $consectiveMatches = 0;
         $consectiveMatches = 1 if $typeSearch eq 'and';
         
+        my @matchesPositions;
+        
         foreach $p (keys %{$self->{_patterns}})
         {
             next if not $self->{_patterns}{$p}{'search'};
-            
+                        
             my $pattern = $self->{_patterns}{$p}{'pattern'}->pattern;
-            my $patMatch = ($seqStr =~ m/$pattern/i);
-            
+            my $tmpStr = $seqStr;
+            my $patMatch = $tmpStr =~ m/$pattern/gi;
+            my $strMatched = $&;
+
             $patMatch = !$patMatch if $self->{_patterns}{$p}{'not'};
+            
+            if($patMatch == 1 and defined($strMatched))
+            {
+                my $endPosition   = pos($tmpStr);
+                my $startPosition = $endPosition - length($strMatched);
+                my @tmp = ($startPosition, $endPosition);
+                push @matchesPositions, [@tmp];
+            }
             
             if( $typeSearch eq 'and' )
             {
@@ -368,6 +382,8 @@ sub find_matches_on_sequences
             $model->set($iter, $maxPatterns+1 => $seq{'header'});
             $model->set($iter, $maxPatterns+2 => $seq{'seq'});
             
+            $self->{_seqViewer}->addMatchMarker($seqType, $i, @matchesPositions);
+            
             ++$countPatternsWithMatches;
         }
     }
@@ -388,6 +404,7 @@ sub on_btnFindPattern_clicked
     my $typeSearch = 'or';
     $typeSearch = 'and' if $self->{_builder}->get_object("radAnd")->get_active;
     
+    $self->{_seqViewer}->clearMatches();
     find_matches_on_sequences($self, 'positive', $typeSearch);
     find_matches_on_sequences($self, 'negative', $typeSearch);
 }

@@ -11,6 +11,9 @@ my $dataSet =
     ['VPF3', '1', '0']
 ];
 
+$arff->addComment("Positive file: teste.fasta");
+$arff->addComment("Negative file: teste.fasta");
+
 $arff->relation('Teste');
 
 $arff->addAttribute('pattern', 'string');
@@ -24,7 +27,6 @@ for $d (@$dataSet)
 
 $arff->writeFile("file.txt");
 
-$arff->readFile("file.txt");
-
-$arff->writeFile("file_out.txt");
+#$arff->readFile("file.txt");
+#$arff->writeFile("file_out.txt");
 

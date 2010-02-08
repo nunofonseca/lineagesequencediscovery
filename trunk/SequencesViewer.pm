@@ -165,6 +165,58 @@ sub jumpToLine
     
     my ($iter, $linetop) = $textview->get_buffer()->get_iter_at_line($line);
     $textview->scroll_to_iter($iter, 0, 1, 0.0, 0.0);    
+    $textview->place_cursor_onscreen();
+}
+
+sub putSequenceOnBuffer
+{
+    my ($self, $seqfile, $i, $buffer, $iter) = @_;
+
+    my %seq = $seqfile->getSequence($i);
+        
+    if( $self->{_showHeaders} )
+    {
+        my $maxHeaderLen = $seqfile->maxHeaderLength();
+        my $header = $seq{'header'};
+        my $sizeDiff = $maxHeaderLen - length($header);
+        
+        for(my $j = 0; $j < $sizeDiff; ++$j)
+        { $header .= " "; }
+        
+        $buffer->insert_with_tags_by_name($iter, $header, ('seqheader') );
+        $buffer->insert($iter, " ");
+    }
+    
+    if( $self->{_showSequence} )
+    {
+        my $tmpIter = $iter;
+        $buffer->insert($iter, $seq{'seq'});
+    }
+        
+    return $iter;
+}
+
+sub putSequenceSpacesOnBuffer
+{
+    my ($self, $seqfile, $i, $buffer) = @_;
+    return if not $self->{_showAligned} or not $self->{_showSequence};
+    
+    my %seq = $seqfile->getSequence($i);
+
+    my $offset = 0;
+    $offset = $seqfile->maxHeaderLength() +1 if $self->{_showHeaders};
+    
+    my $tmpIter = $buffer->get_iter_at_line($i);
+    
+    my $len = @{$seq{'spaces'}}-1;
+    for $p (0..$len)
+    {
+        my $start = (@{$seq{'spaces'}}[$p])[0][0];
+        my $count = (@{$seq{'spaces'}}[$p])[0][1];
+
+        $tmpIter->set_line_offset($offset + $start);
+        $buffer->insert($tmpIter, '-' x $count);
+    }
 }
 
 sub showSequencesOnBuffer
@@ -181,46 +233,91 @@ sub showSequencesOnBuffer
     
     for(my $i = 0; $i < $numSeqs; ++$i)
     {
-        my %seq = $seqfile->getSequence($i);
-        
-        if( $self->{_showHeaders} )
-        {
-            my $header = $seq{'header'};
-            my $sizeDiff = $maxHeaderLen - length($header);
-            
-            for(my $j = 0; $j < $sizeDiff; ++$j)
-            { $header .= " "; }
-            
-            $buffer->insert_with_tags_by_name($startIter, $header, ('seqheader') );
-            $buffer->insert($startIter, " ");
-        }
-        
-        my $offset = 0;
-        $offset = $maxHeaderLen if $self->{_showHeaders};
-        
-        if( $self->{_showSequence} )
-        {
-            my $tmpIter = $startIter;
-            $buffer->insert($startIter, $seq{'seq'});
-            
-            if($self->{_showAligned})
-            {
-                my $len = @{$seq{'spaces'}}-1;
-                for $p (0..$len)
-                {
-                    my $start = (@{$seq{'spaces'}}[$p])[0][0] + 1;
-                    my $count = (@{$seq{'spaces'}}[$p])[0][1];
-                    
-                    my $whereIter = $tmpIter;
-                    $tmpIter->set_line_offset($offset + $start);
-                    $buffer->insert($tmpIter, '-' x $count);
-                }
-            }
-        }
-        
-        $buffer->insert($startIter, "\n");    
+        $startIter = $self->putSequenceOnBuffer($seqfile, $i, $buffer, $startIter);  
+        $buffer->insert($startIter, "\n");
+        $self->putSequenceSpacesOnBuffer($seqfile, $i, $buffer);
+        $startIter = $buffer->get_iter_at_line($i+1);
     }
 }
+
+sub clearMatches
+{
+    my ($self) = @_;
+    
+    $self->{_bufferPos}->remove_tag_by_name('selectedseq', $self->{_bufferPos}->get_start_iter, $self->{_bufferPos}->get_end_iter);
+    $self->{_bufferNeg}->remove_tag_by_name('selectedseq', $self->{_bufferNeg}->get_start_iter, $self->{_bufferNeg}->get_end_iter);
+    
+    my @markers = $self->{_bufferPos}->get_markers_in_region($self->{_bufferPos}->get_start_iter, $self->{_bufferPos}->get_end_iter);
+    foreach $marker (@markers)
+    {
+        if( $marker->get_marker_type eq 'patternmatch' )
+        { $self->{_bufferPos}->delete_marker($marker); }
+    }
+    
+    @markers = $self->{_bufferNeg}->get_markers_in_region($self->{_bufferNeg}->get_start_iter, $self->{_bufferNeg}->get_end_iter);
+    foreach $marker (@markers)
+    {
+        if( $marker->get_marker_type eq 'patternmatch' )
+        { $self->{_bufferNeg}->delete_marker($marker); }
+    }
+}
+
+sub addMatchMarker
+{
+    my ($self, $buf, $seqPos, @matchesPositions) = @_;
+    
+    my $buffer = undef;
+    my $seqfile = undef;
+    
+    if($buf eq 'positive')
+    {
+        $buffer = $self->{_bufferPos} ;
+        $seqfile = \$self->{_posFile};
+    }elsif($buf eq 'negative')
+    {
+        $buffer = $self->{_bufferNeg} ;
+        $seqfile = \$self->{_negFile};
+    }
+        
+    return if not defined($buffer) or not defined($seqfile);
+    
+    if(@matchesPositions)
+    {        
+        my %seq = $$seqfile->getSequence($seqPos);
+
+        my $offset = 0;
+        $offset = $$seqfile->maxHeaderLength() + 1 if $self->{_showHeaders};
+
+        # Delete the current line
+        my $lineIter = $buffer->get_iter_at_line($seqPos);
+        $lineIterEnd = $buffer->get_iter_at_line($seqPos);
+        $lineIterEnd->forward_to_line_end;
+        $buffer->delete($lineIter, $lineIterEnd);
+        
+        # Insert unaligned sequence
+        $self->putSequenceOnBuffer($$seqfile, $seqPos, $buffer, $lineIter);  
+        
+        # Mark found pattern matches
+        foreach $a (@matchesPositions)
+        {
+            my ($startPosition, $endPosition) = @$a;
+            
+            $lineIter = $buffer->get_iter_at_line($seqPos);
+            $lineIterEnd = $buffer->get_iter_at_line($seqPos);
+            $lineIter->set_line_offset($offset + $startPosition);
+            $lineIterEnd->set_line_offset($offset + $endPosition);            
+            $buffer->apply_tag_by_name('patternmatch', $lineIter, $lineIterEnd);
+        }
+        
+        # Insert spaces!
+        $self->putSequenceSpacesOnBuffer($$seqfile, $seqPos, $buffer);
+    }
+    
+    $lineIter = $buffer->get_iter_at_line($seqPos);
+    $buffer->create_marker(undef, 'patternmatch', $lineIter);    
+    
+}
+
 
 #################### END OF METHODS ##################
 
@@ -453,7 +550,7 @@ sub addStyleTags
     $tags{'patternmatch'}->set_property('background-set', 1);
     $tags{'patternmatch'}->set_property('background-full-height', 1);
     $tags{'patternmatch'}->set_property('background-full-height-set', 1);
-    $tags{'patternmatch'}->set_property('background', 'blue');
+    $tags{'patternmatch'}->set_property('background', '#00ba00');
     
     $tags{'seqheader'}->set_property('background-set', 1);
     $tags{'seqheader'}->set_property('background-full-height', 1);
