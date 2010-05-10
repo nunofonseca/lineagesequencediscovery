@@ -24,3 +24,28 @@ Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffe
   This ensures you will be able access all modes of T-Coffee.
 
 The compiling process will take a while, so go do something else :)
+
+===Installing Gtk2::SourceView===
+LSD uses the Gtk2's SourceView control to show the loaded sequences.
+
+Unfortunatly, and although there are packages of bindings for Ruby and Python, there is no package for the Perl binding!
+
+This means you have to build an RPM for the binding. 
+The original Perl binding is located [http://search.cpan.org/~EBASSI/Gtk2-SourceView-1.000/SourceView.pm here].
+
+*In order to save you some time and headaches, I've built the necessary packages for the i686 platform.* 
+You can download them from the "Download" section.
+
+  # Install _rpm-build-reb00t-0.1.0-1.n0i.9.fc12.noarch.rpm_
+    {{{sudo yum -y --nogpgcheck install rpm-build-reb00t-0.1.0-1.n0i.9.fc12.noarch.rpm}}}
+
+  # Install _rpm-build-reb00t-perl-0.1.0-1.n0i.9.fc12.noarch.rpm_
+    {{{sudo yum -y --nogpgcheck install rpm-build-reb00t-perl-0.1.0-1.n0i.9.fc12.noarch.rpm}}}
+
+  # Install _perl-Gtk2-SourceView-1.000-1.n0i.1.fc12.i686.rpm_
+    {{{sudo yum -y --nogpgcheck install perl-Gtk2-SourceView-1.000-1.n0i.1.fc12.i686.rpm}}}
+
+===Installing LSD===
+
+Now you should be able to install LSD without any problem!
+Double-click the RPM and let the package manager do it's job.
