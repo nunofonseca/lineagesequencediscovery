@@ -12,3 +12,8 @@ Some external tools are used:
 Just download the .deb file, double-click it to open the Package Installer and then choose 'Install Package'. All dependencies will be automatically installed.
 
 ==Fedora 12==
+Getting LSD to run on Fedora 12 is a bit trickier, mostly due to inexistent dependencies.
+
+===Installing T-Coffee===
+To take full advantage of LSD, you'll need T-Coffee.
+Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffee's homepage]
