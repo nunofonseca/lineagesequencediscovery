@@ -43,7 +43,7 @@ You can download them from the "Download" section.
     {{{sudo yum -y --nogpgcheck install rpm-build-reb00t-perl-0.1.0-1.n0i.9.fc12.noarch.rpm}}}
 
   # Install _perl-Gtk2-!SourceView-1.000-1.n0i.1.fc12.i686.rpm_
-    {{{sudo yum -y --nogpgcheck install perl-Gtk2-!SourceView-1.000-1.n0i.1.fc12.i686.rpm}}}
+    {{{sudo yum -y --nogpgcheck install perl-Gtk2-SourceView-1.000-1.n0i.1.fc12.i686.rpm}}}
 
 ===Installing LSD===
 
