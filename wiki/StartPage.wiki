@@ -1,0 +1,16 @@
+#summary Start Page
+
+=Introduction=
+_Lineage Sequence Discovery_ is program made in Perl, using the Gtk2+ toolkit, that aims to simplify the discovery of patterns within biological sequences.
+
+This project is being made under the context of an integration in research grant, sponsored by the [http://alfa.fct.mctes.pt/ FCT]. [http://diogocosta.pt.tl/ Diogo Costa], who received the grant, is working on the project under the supervision of [mailto:jbvieira@ibmc.up.pt Jorge Vieira] and [mailto:nf@ibmc.up.pt Nuno Fonseca] at Instituto de Biologia Molecular e Celular ([http://www.ibmc.up.pt/ IBMC]).
+
+Some external tools are used:
+  * [http://cracs.fc.up.pt/~nf/projects/sigdis/ SigDis], by [http://cracs.fc.up.pt/~nf/ Nuno Fonseca], is used to find search patterns in order to get the best results when searching.
+  * A simple graphical interface to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffee] is also included, to allow the alignment of the positive and negative files from the graphical interface.
+
+=Install Instructions=
+==Ubuntu 9.04 (Karmic Koala)==
+Just download the .deb file, double-click it to open the Package Installer and then choose 'Install Package'. All dependencies will be automatically installed.
+
+==Fedora 12==
