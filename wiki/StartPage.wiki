@@ -16,4 +16,11 @@ Getting LSD to run on Fedora 12 is a bit trickier, mostly due to inexistent depe
 
 ===Installing T-Coffee===
 To take full advantage of LSD, you'll need T-Coffee.
-Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffee's homepage]
+Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffee's homepage] and download the source package (check the 'Downloads' box -> 'Latest Version'). LSD was tested using version 8.69, but, unless the T-Coffee's command line arguments changed, newer versions should work.
+  # Uncompress the file you just downloaded
+  # Open a terminal where the 'install' file
+  # On the terminal, type
+    {{{sudo ./install all}}}
+  This ensures you will be able access all modes of T-Coffee.
+
+The compiling process will take a while, so go do something else :)
