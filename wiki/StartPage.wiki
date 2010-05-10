@@ -14,19 +14,19 @@ Just download the .deb file, double-click it to open the Package Installer and t
 ==Fedora 12==
 Getting LSD to run on Fedora 12 is a bit trickier, mostly due to inexistent dependencies.
 
-===Installing T-Coffee===
-To take full advantage of LSD, you'll need T-Coffee.
-Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html T-Coffee's homepage] and download the source package (check the 'Downloads' box -> 'Latest Version'). LSD was tested using version 8.69, but, unless the T-Coffee's command line arguments changed, newer versions should work.
+===Installing `T-Coffee`===
+To take full advantage of LSD, you'll need `T-Coffee`.
+Go to [http://www.tcoffee.org/Projects_home_page/t_coffee_home_page.html `T-Coffee`'s homepage] and download the source package (check the 'Downloads' box -> 'Latest Version'). LSD was tested using version 8.69, but, unless the `T-Coffee`'s command line arguments changed, newer versions should work.
   # Uncompress the file you just downloaded
   # Open a terminal where the 'install' file
   # On the terminal, type
     {{{sudo ./install all}}}
-  This ensures you will be able access all modes of T-Coffee.
+  This ensures you will be able access all modes of `T-Coffee`.
 
 The compiling process will take a while, so go do something else :)
 
-===Installing Gtk2::SourceView===
-LSD uses the Gtk2's SourceView control to show the loaded sequences.
+===Installing `Gtk2::SourceView`===
+LSD uses the `Gtk2`'s `SourceView` control to show the loaded sequences.
 
 Unfortunatly, and although there are packages of bindings for Ruby and Python, there is no package for the Perl binding!
 
