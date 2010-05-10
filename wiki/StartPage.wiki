@@ -1,5 +1,3 @@
-#summary Start Page
-
 =Introduction=
 _Lineage Sequence Discovery_ is program made in Perl, using the Gtk2+ toolkit, that aims to simplify the discovery of patterns within biological sequences.
 
