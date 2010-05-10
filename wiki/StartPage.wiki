@@ -9,7 +9,8 @@ Some external tools are used:
 
 =Install Instructions=
 ==Ubuntu 9.04 (Karmic Koala)==
-Just download the .deb file, double-click it to open the Package Installer and then choose 'Install Package'. All dependencies will be automatically installed.
+  # Just download the .deb file, double-click it to open the Package Installer and then choose 'Install Package'. All dependencies will be automatically installed.
+  # *For LSD to detect SigDis, you'll need to, at least, logout.*
 
 ==Fedora 12==
 Getting LSD to run on Fedora 12 is a bit trickier, mostly due to inexistent dependencies.
@@ -49,3 +50,6 @@ You can download them from the "Download" section.
 
 Now you should be able to install LSD without any problem!
 Double-click the RPM and let the package manager do it's job.
+
+===Logout===
+  # *For LSD to detect SigDis, you'll need to, at least, logout.*
