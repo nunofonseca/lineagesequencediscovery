@@ -1,0 +1,58 @@
+#summary Install instructions
+#labels Featured,Phase-Deploy
+
+= Introduction =
+
+Follow the instructions below to install all the components necessary to use LSD to its fullest!
+
+
+= Details =
+
+== Ubuntu Lucid Lynx (10.4) and related ==
+
+Use the .deb package available at the download section.
+
+Double click the file and Synaptic should open.
+
+Click 'Install Package' and you're done! 
+
+T-Coffee will also be installed by the package manager.
+
+To install MEME, you have to compile it on your own. See below how!
+
+=== Installing MEME ===
+
+MEME is only available through it's source code. Meaning, you have to compile it first!
+First, ensure that your operating system has all packages necessary for building C++ programs: linux-headers, gcc, g++, etc.
+
+Then go to MEME's download [http://meme.nbcr.net/downloads/ repository] and download _meme_current.tar.gz_ and it's correspondent patches. 
+
+At the moment of the writing of this document, MEME is at version 4.4.0, so the downloads would be: meme_4.4.0.tar.gz (or meme_current.tar.gz), meme_4.4.0.patch_1, meme_4.4.0.patch_2 and meme_4.4.0.patch_3.
+
+Instructions on how to apply the patches are available on the repository under the name _meme_4.4.0.patch{{{_#_}}}readme.txt_, where # is the patch number.
+
+Open a terminal and navigate to the folder where you putted the tar.gz.
+Now type
+{{{
+    $ tar zxf meme_VERSION.tar.gz
+    $ cd meme_VERSION 
+    $ ./configure --prefix=/usr/local
+}}}
+
+Apply all the necessary patches.
+
+Now compile and install!
+
+Compile:
+{{{
+    $ make
+}}}
+
+Install:
+{{{
+    $ su
+      [Enter root password!]
+    # make install
+}}}
+
+Everything should have gone well!
