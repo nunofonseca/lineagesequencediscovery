@@ -84,7 +84,7 @@ LSD was tested using version 8.69, but, unless the `T-Coffee`'s command line arg
   # Uncompress the file you just downloaded
   # Open a terminal where the 'install' file
   # On the terminal, type
-    {{{sudo ./install all}}}
+    {{{su -c './install all'}}}
   This ensures you will be able access all modes of `T-Coffee`.
 
 The compiling process will take a while, so go do something else :)
