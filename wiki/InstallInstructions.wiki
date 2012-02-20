@@ -39,9 +39,14 @@ Now type
     $ ./configure --prefix=/usr/local
 }}}
 
-Apply all the necessary patches.
+If this step fails, you may be missing the necessary tools to compile a program.
+Run the following commands as root to install the necessary tools and libraries:
 
-Now compile and install!
+{{{
+    # yum groupinstall "Development Tools"
+}}}
+
+Now, apply all the necessary patches to MEME, compile and install!
 
 Compile:
 {{{
