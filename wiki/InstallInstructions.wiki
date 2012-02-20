@@ -62,6 +62,16 @@ Install:
 
 Everything should have gone well!
 
+Try to run MEME:
+{{{
+    $ meme
+}}}
+
+If it shows the following error: "/bin/csh: Bad interpreter", run the following command as root:
+{{{
+    # yum install csh
+}}}
+
 == Fedora 12/13 ==
 
 Download the RPM packages available at the download section.
