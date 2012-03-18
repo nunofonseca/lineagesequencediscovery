@@ -1,0 +1,102 @@
+--------------------------------------------------------------------------------
+Program availability
+--------------------------------------------------------------------------------
+t_coffee: available
+sigdis: available
+meme: available
+--------------------------------------------------------------------------------
+/home/h4evr/Dropbox/IBMC_2010/LSD/demo1
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb  9 15:24:14 2011
+--------------------------------------------------------------------------------
+Running command: cd /home/h4evr/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-9-15-24/ && sigdis.pl -p "14424.pos.fasta" -n "14424.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 3 -i prot -v 2>&1
+Output:
+SigDis v0.2.
+Sequences(+,-)=(15,15)
+Generating train/test files
+INFO: Converting 14424.pos.fasta.train to 14424.pos.fasta.train.seq...done. (5780 -> 5781)
+INFO: Converting 14424.neg.fasta.train to 14424.neg.fasta.train.seq...done. (2788 -> 2789)
+...14424.pos.fasta.train.seq: 8
+...14424.neg.fasta.train.seq: 8
+...14424.pos.fasta.test: 7
+...14424.neg.fasta.test: 7
+>Generating seeds...
+wd -x -2 -v 0 -e 2.8 -m 3 -c 14424.pos.fasta.train.seq -f 14424.pos.fasta.wd.conf  2> /dev/nullUse of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 1.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 2.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 3.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 4.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 5.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 6.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 7.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 8.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 9.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 10.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 11.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 12.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 13.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 14.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 15.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 16.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 17.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 18.
+<Generating seeds: 0 seeds
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.
+--------------------------------------------------------------------------------
+Wed Feb  9 15:25:02 2011
+--------------------------------------------------------------------------------
+Running command: cd /home/h4evr/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-9-15-24/ && sigdis.pl -p "14424.pos.fasta" -n "14424.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 3 -i prot -v 2>&1
+Output:
+SigDis v0.2.
+Sequences(+,-)=(15,15)
+Generating train/test files
+INFO: Converting 14424.pos.fasta.train to 14424.pos.fasta.train.seq...done. (5747 -> 5748)
+INFO: Converting 14424.neg.fasta.train to 14424.neg.fasta.train.seq...done. (3063 -> 3064)
+...14424.pos.fasta.train.seq: 8
+...14424.neg.fasta.train.seq: 8
+...14424.pos.fasta.test: 7
+...14424.neg.fasta.test: 7
+>Generating seeds...
+wd -x -2 -v 0 -e 2.8 -m 3 -c 14424.pos.fasta.train.seq -f 14424.pos.fasta.wd.conf  2> /dev/nullUse of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 1.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 2.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 3.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 4.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 5.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 6.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 7.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 8.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 9.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 10.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 11.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 12.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 13.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 14.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 15.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 16.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 17.
+Use of uninitialized value $pos in numeric ge (>=) at /opt/lineagesequencediscovery/sigdis//sigdis.pl line 477, <fd1> line 18.
+<Generating seeds: 0 seeds
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.

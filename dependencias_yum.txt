@@ -1,0 +1,4 @@
+perl-bioperl
+perl-Gtk2
+perl-Gtk2-SourceView
+perl-Number-Format

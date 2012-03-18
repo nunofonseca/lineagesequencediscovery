@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=LSD
+Comment=Search for patterns in biological sequences
+Path=/opt/lineagesequencediscovery/
+TryExec=/opt/lineagesequencediscovery/LSD
+Exec=/opt/lineagesequencediscovery/LSD
+Icon=/opt/lineagesequencediscovery/LSD.png
+Categories=Education;Science;Biology;GNOME;
+Terminal=false
+Type=Application
+StartupNotify=true
+Name[en_US]=LSD

@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+#echo "usage: fasta_flat.sh fasta_file"
+# removes the 80 chars boundary on each fasta line
+
+
+my $start=0;
+$_=<>;
+while (!eof(STDIN)) {
+#"$_" ne ""
+    if ( /^>/ ) {
+	$start=1;
+	s/\n//;
+	print "$_\n";
+	if (eof(STDIN)) { exit(0); }
+	$_=<>;
+	while ( /^[A-Za-z\-]/ ) {
+	    s/\n//;
+	    print ;
+	    if ( eof(STDIN) ) { print "\n";exit(0); }
+	    $_=<>;
+	}
+	print "\n";
+    } else {
+#	if ( $start==1 ) {
+#	    print STDERR "Invalid fasta header: $_\n";
+#	    exit(1);
+#	}
+	$_=<>;
+    }
+    chomp;
+}
+exit(0);

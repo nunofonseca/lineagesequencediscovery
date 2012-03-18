@@ -1,0 +1,42 @@
+--------------------------------------------------------------------------------
+Program availability
+--------------------------------------------------------------------------------
+t_coffee: available
+sigdis: available
+meme: available
+--------------------------------------------------------------------------------
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb  9 10:49:17 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-9-10-49/ && sigdis.pl -p "12289.pos.fasta" -n "12289.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 1000 -w 3 -i prot -v 2>&1
+Output:
+SigDis v0.2.
+Sequences(+,-)=(15,15)
+Generating train/test files
+INFO: Converting 12289.pos.fasta.train to 12289.pos.fasta.train.seq...done. (7406 -> 7407)
+INFO: Converting 12289.neg.fasta.train to 12289.neg.fasta.train.seq...done. (2788 -> 2789)
+...12289.pos.fasta.train.seq: 8
+...12289.neg.fasta.train.seq: 8
+...12289.pos.fasta.test: 7
+...12289.neg.fasta.test: 7
+>Generating seeds...
+wd -x -2 -v 0 -e 2.8 -m 3 -c 12289.pos.fasta.train.seq -f 12289.pos.fasta.wd.conf  2> /dev/null<Generating seeds: 0
+ seeds
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.

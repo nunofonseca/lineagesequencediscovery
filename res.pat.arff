@@ -1,0 +1,29 @@
+
+@RELATION 'Patterns: stats and search methods'
+
+@ATTRIBUTE id numeric
+@ATTRIBUTE seed string
+@ATTRIBUTE pattern string
+@ATTRIBUTE trainnumMatchesPos numeric
+@ATTRIBUTE trainnumMatchesNeg numeric
+@ATTRIBUTE trainrecallPos numeric
+@ATTRIBUTE trainrecallNeg numeric
+@ATTRIBUTE trainprecision numeric
+@ATTRIBUTE trainfMeasure numeric
+@ATTRIBUTE trainstdDevPos numeric
+@ATTRIBUTE trainstdDevNeg numeric
+@ATTRIBUTE testnumMatchesPos numeric
+@ATTRIBUTE testnumMatchesNeg numeric
+@ATTRIBUTE testrecallPos numeric
+@ATTRIBUTE testrecallNeg numeric
+@ATTRIBUTE testprecision numeric
+@ATTRIBUTE testfMeasure numeric
+@ATTRIBUTE teststdDevPos numeric
+@ATTRIBUTE teststdDevNeg numeric
+@ATTRIBUTE search numeric
+@ATTRIBUTE not numeric
+
+@DATA
+1,WKQ,W[KQVY][CGHPQ],66,0.759,0,0,0,0.0459,0.863,1,25,0.676,0.13,0.0701,3,0.0769,0.769,0.893,1,0
+2,GIVC,[GLR][IW][ASTV][CIKL],85,0.977,0,0,0,0.0161,0.988,1,35,0.946,0.217,0.086,5,0.0372,0.909,0.875,1,0
+

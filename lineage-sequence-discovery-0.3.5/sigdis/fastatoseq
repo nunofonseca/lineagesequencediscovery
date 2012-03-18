@@ -1,0 +1,52 @@
+#!/bin/sh
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+############################################################################################
+# 
+#  Copyright (c) 2006 Nuno Fonseca. All rights reserved.
+#  This code is freely available for academic purposes.
+#  If you intend to use it for commercial purposes then please contact the author first.
+#
+#  Author: Nuno A. Fonseca 
+#  Date: 2006-08-02
+#  $Id$
+# 
+###########################################################################################/
+
+set conf(files) "[join [split $argv \n]]"
+set conf(fasta2seq)  "fasta2seq"
+
+
+proc print_info { msg } {
+    puts stderr "INFO: $msg"
+    flush stderr
+}
+proc print_info_nocr { msg } {
+    puts -nonewline stderr "INFO: $msg"
+    flush stderr
+}
+proc convert_files2seq {} {
+    variable conf
+
+    set conf(seq_files) ""
+    foreach file $conf(files) {	
+      set file [string trim $file " "]
+      if { $file !="" } {
+	set seq_file "$file.seq"
+	catch {exec rm  -f $seq_file}
+	print_info_nocr "Converting $file to $seq_file..."
+	catch {exec bash -c "cat $file | $conf(fasta2seq) > $seq_file; echo \"\" >> $seq_file"; set _ ""} res
+	if {$res!="" } {
+	    puts "\nWarning: error converting $file: $res" 
+	    print_info "considering original file as a seq file"
+	    #puts "rm -f $seq_file"
+	    catch {exec rm -f $seq_file}
+	    print_info "ln -s [file normalize $file]  [file normalize $seq_file]"
+	    exec ln -s [file normalize $file]  [file normalize $seq_file]
+	}
+	set conf(seq_files) "$conf(seq_files) $seq_file"
+	puts stderr "done. ([file size $file] -> [file size $seq_file])"
+      }
+    }
+}
+convert_files2seq

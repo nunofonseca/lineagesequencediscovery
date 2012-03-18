@@ -1,0 +1,34 @@
+% Positive file: /home/h4evr/Dropbox/IBMC_2010/LSD/demo1/positive.fasta
+% Negative file: /home/h4evr/Dropbox/IBMC_2010/LSD/demo1/negative.fasta
+% Patterns file: /home/h4evr/Dropbox/IBMC_2010/LSD/res.pat.arff
+
+@RELATION 'Pattern search results'
+
+@ATTRIBUTE SeqNum numeric
+@ATTRIBUTE 1 numeric
+@ATTRIBUTE Header string
+@ATTRIBUTE class {+,-}
+
+@DATA
+1,1,gi|40764015|gb|AAR89637.1|,+
+7,1,gi|41020884|gb|AAR98633.1|,+
+8,1,gi|33188217|gb|AAP97871.1|,+
+9,1,gi|75288178|gb|ABA18179.1|,+
+10,1,gi|40764042|gb|AAR89639.1|,+
+13,1,gi|41020960|gb|AAR98636.1|,+
+14,1,gi|41020924|gb|AAR98635.1|,+
+2,1,gi|168829524|gb|ACA34120.1|,-
+3,1,gi|168829521|gb|ACA34119.1|,-
+4,1,gi|168829519|gb|ACA34118.1|,-
+5,1,gi|168829516|gb|ACA34117.1|,-
+6,1,gi|168829513|gb|ACA34116.1|,-
+7,1,gi|168829506|gb|ACA34115.1|,-
+8,1,gi|168829504|gb|ACA34114.1|,-
+9,1,gi|168829501|gb|ACA34113.1|,-
+10,1,gi|168829491|gb|ACA34112.1|,-
+11,1,gi|168829486|gb|ACA34111.1|,-
+12,1,gi|168829479|gb|ACA34110.1|,-
+13,1,gi|168829472|gb|ACA34109.1|,-
+14,1,gi|168829470|gb|ACA34108.1|,-
+15,1,gi|168829468|gb|ACA34107.1|,-
+

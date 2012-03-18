@@ -1,0 +1,2208 @@
+
+#!/bin/sh
+#-*-tcl-*-
+# the next line restarts using wish \
+exec wish "$0" -- ${1+"$@"}
+
+###############################################################################
+#
+# SigDisGUI -- A graphical front-end to Sigdis for Unix.
+# Copyright (C) 2008 by Nuno A. Fonseca
+#
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.        See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+###############################################################################
+
+package require Tk 8.4
+
+###############################################################################
+# Setup Procs
+###############################################################################
+proc init_win_setup {} {
+    global opts
+    global g
+    global screenWidth screenHeight
+    global w
+
+    # get this out of the way -- we want to draw the whole user interface
+    # behind the scenes, then pop up in all of its well-laid-out glory
+    set screenWidth  [winfo vrootwidth .]
+    set screenHeight [winfo vrootheight .]
+    wm withdraw .
+
+    # FIXME - move to preferences
+    option add "*TearOff" false 100
+    option add "*BorderWidth" 1 100
+    option add "*ToolTip.background" LightGoldenrod1
+    option add "*ToolTip.foreground" black
+
+    # determine the windowing platform, since there are different ways to
+    # do this for different versions of tcl
+    if {[catch {tk windowingsystem} g(windowingSystem)]} {
+	if {"$::tcl_platform(platform)" == "unix"} {
+	    set g(windowingSystem) "x11"
+	} elseif {"$::tcl_platform(platform)" == "macintosh"} {
+	    set g(windowingSystem) "classic"
+	} else {
+	    # this should never happen, but just to be sure...
+	    set g(windowingSystem) "x11"
+	}
+    }
+            
+    # Try to find a pleasing native look for each platform.
+    # Fonts.
+    set sysfont [font actual system]
+    #debug-info "system font: $sysfont"
+    
+    # See what the native menu font is
+    . configure -menu .native
+    menu .native
+    set menufont [lindex [.native configure -font] 3]
+    destroy .native
+    
+    # Find out what the tk default is
+    label .testlbl -text "LABEL"
+    set labelfont [lindex [.testlbl configure -font] 3]
+    destroy .testlbl
+    
+    text .testtext
+    set textfont [lindex [.testtext configure -font] 3]
+    destroy .testtext
+    
+    entry .testent
+    set w(selcolor) [lindex [.testent configure -selectbackground] 4]
+    set entryfont [lindex [.testent configure -font] 3]
+    destroy .testent
+    # the above results in a nearly undistinguishable darker gray for the
+    # selected color (rh8 with tk 8.3.3-74) "#c3c3c3"
+    set w(selcolor) "#b03060"
+    
+    set font [list $textfont]
+
+# bug in tk??
+    set bold [list [concat $textfont bold]]
+    set italic [list [concat $textfont italic]]
+
+    set bold $font
+    set italic $font
+
+    #debug-info "font: $font"
+    #debug-info "bold: $bold\n"
+    option add *Label.font $labelfont userDefault
+    option add *Button.font $labelfont userDefault
+    option add *Menu.font $menufont userDefault
+    option add *Entry.font $entryfont userDefault
+    
+    # This makes tk_messageBox use our font.  The default tends to be terrible
+    # no matter what platform
+    option add *Dialog.msg.font $labelfont userDefault
+    
+    global colorchg
+    if {[string first "color" [winfo visual .]] >= 0} {
+	#nf
+	set g(bold)   "-background #43ce80 -relief raised -borderwidth 1"
+	set g(normal) "-background {} -relief flat"
+
+	array set opts [subst {
+	    matchantag "-background gray"
+	    matchtag   "-background $colorchg"
+	    inlinetag  "-background $colorchg -font $bold"
+	    textopt    "-background white -foreground black -font $font"
+	    currtag    "-background Khaki"
+
+	    patlinetag ""
+	    pattag     ""
+	}]
+	
+    } else {
+	
+	set g(bold) "-foreground white -background black"
+	set g(normal) "-foreground {} -background {}"
+	# Assume only black and white
+	set bg "black"
+	array set opts [subst {
+	    matchtanag    "-background white -foreground black -font $bold"
+	    matchtag    "-background white -foreground black -font $bold"
+	    inlinetag  "-background $colorchg -font $bold"
+	    textopt    "-background white -foreground black -font $font"	    
+	    currtag    "-background white -foreground black -font $font"	    
+	}]
+    }
+    
+    # make sure wrapping is turned off. This might piss off a few people,
+    # but it would screw up the display to have things wrap
+    set opts(textopt) "$opts(textopt) -wrap none"
+
+}
+
+# Initialize arrays
+proc init_arrays {} {
+    global g opts  uniq data
+    global colorins colorchg
+    set colordel Tomato
+    set colorins PaleGreen
+    set colorchg DodgerBlue
+
+    array set data {
+	fpos         ""
+	fneg         ""
+	fpos_fasta         ""
+	fneg_fasta         ""
+	fpos_aln         ""
+	fneg_aln         ""
+	pat_file         ""
+	minpos       1.0
+	maxneg       0.0
+	t            0.5
+	e            ""
+	prefix       ""
+    }
+
+    array set g {
+	destroy         ""
+	statusCurrent   ""
+	statusInfo      ""
+	ignore_hevent,1 0
+	ignore_hevent,2 0
+
+	showaln_fpos         0
+	showaln_fneg         0
+	initOK          0
+	started         0
+	
+	debug           0
+	
+	ignore_event,1  0
+	ignore_event,2  0
+
+	mapborder       0
+	mapheight       0
+	returnValue     0
+
+    }
+    
+    # These options may be changed at runtime
+    array set opts {
+	colorcbs          1
+	chowcbs           1
+	coubscmd          "sigdis.pl"
+	coubscmd_opts     ""
+	seqalign_cmd      "clustalw2 -align -type=protein -outfile=\$outfile -outorder=input -infile=\$infile -output=gde -case=upper"
+	showln            1
+
+	matchescmd        "pdx"
+	matchescmd_opts   ""
+	geometry          "80x30"
+	showlineview      0
+	showinline1       1
+	showinline2       1
+	syncscroll        1
+	tagtext           1
+    }
+#clustalw
+# quick align 
+#  -quicktree
+#    options> -ktuple=wordsize -pairgap=gappenality
+# slow align (default)
+#  options: 
+#     PWMATRIX=    :Protein weight matrix=BLOSUM, PAM, GONNET, ID or filename
+
+    set opts(+) "-background $colorins -foreground $colorins"
+    set opts(-) "-background $colorins -foreground $colordel"
+    
+    set uniq 0
+}
+
+proc update-status { msg } {
+    global g
+    set g(statusCurrent) "$msg"
+#    show-info "$msg"
+}
+
+###############################################################################
+# Exit with proper code
+###############################################################################
+proc do-exit {{returncode {}}} {
+    debug-info "do-exit ($returncode)"
+    global g
+
+    # we don't particularly care if del-tmp fails.
+    if {$returncode == ""} {
+        set returncode $g(returnValue)
+    }
+    # exit with an appropriate return value
+    exit $returncode
+}
+
+###############################################################################
+# Modal error dialog.
+###############################################################################
+proc do-error {msg} {
+    global g
+
+    debug-info "do-error ($msg)"
+    tk_messageBox -message "$msg" -title "$g(name): Error" -icon error -type ok
+}
+
+###############################################################################
+# Throw up a modal error dialog or print a message to stderr.  For
+# Unix we print to stderr and exit if the main window hasn't been
+# created, otherwise put up a dialog and throw an exception.
+###############################################################################
+proc fatal-error {msg} {
+    debug-info "fatal-error ($msg)"
+    global g
+
+    if {$g(started)} {
+        tk_messageBox -title "Error" -icon error -type ok -message $msg
+        do-exit 2
+    } else {
+        puts stderr $msg
+        do-exit 2
+    }
+}
+
+###############################################################################
+# Return the smallest of two values
+###############################################################################
+proc min {a b} {
+    return [expr {$a < $b ? $a : $b}]
+}
+
+###############################################################################
+# Return the largest of two values
+###############################################################################
+proc max {a b} {
+    return [expr {$a > $b ? $a : $b}]
+}
+
+
+###############################################################################
+# Toggle line numbers.
+###############################################################################
+proc toogle-show-linenumbers {{showLn {}}} {
+    global opts
+    global w
+
+    if {$showLn != {}} {
+        set opts(showln) $showLn
+    }
+
+    if {$opts(showln)} {
+        grid $w(PosInfo) -row 0 -column 1 -sticky nsew
+        grid $w(NegInfo) -row 0 -column 0 -sticky nsew
+    } else {
+        grid forget $w(PosInfo)
+        grid forget $w(NegInfo)
+    }
+}
+
+###############################################################################
+# Show line numbers in info windows
+###############################################################################
+proc draw-line-numbers {} {
+    global g
+    global w
+
+    $w(PosInfo) configure -state normal
+    $w(NegInfo) configure -state normal
+    $w(PosCB) configure -state normal
+    $w(NegCB) configure -state normal
+
+    set lines(Pos) [lindex [split [$w(PosText) index end-1lines] .] 0]
+    set lines(Neg) [lindex [split [$w(NegText) index end-1lines] .] 0]
+
+    # Smallest line count
+    set minlines [min $lines(Pos) $lines(Neg)]
+
+    # cache all the blank lines for the info and cb windows, and do
+    # one big insert after we're done. This seems to be much quicker
+    # than inserting them in the widgets one line at a time.
+    set linestuff {}
+    set cbstuff {}
+    set seqs   0
+    for {set i 1} {$i < $minlines} {incr i} {
+        append linestuff "[expr ($i+1)/2]\n" ;# print the sequence number
+        append cbstuff " \n" ;# for now, just put in place holders...
+    }
+
+    $w(PosInfo) insert end $linestuff
+    $w(NegInfo) insert end $linestuff
+    $w(PosCB) insert end $cbstuff
+    $w(NegCB) insert end $cbstuff
+
+    # Insert remaining line numbers. We'll cache the stuff to be
+    # inserted so we can do just one call in to the widget. This
+    # should be much faster, relatively speaking, then inserting
+    # data one line at a time.
+    foreach mod {Pos Neg} {
+        set linestuff {}
+        set cbstuff {}
+        for {set i $minlines} {$i < $lines($mod)} {incr i} {
+            append linestuff "$i\n"
+            append cbstuff " \n" ;# for now, just put in place holders...
+        }
+        $w(${mod}Info) insert end $linestuff
+        $w(${mod}CB) insert end $cbstuff
+    }
+
+    $w(PosCB) configure -state disabled
+    $w(NegCB) configure -state disabled
+
+    $w(PosInfo) configure -state disabled
+    $w(NegInfo) configure -state disabled
+}
+
+###############################################################################
+# when the user changes the "sync scrollbars" option, we want to
+# sync up the left scrollbar with the right if they turn the option on
+###############################################################################
+proc toggleSyncScroll {args} {
+    global opts
+    global w
+
+    if {$opts(syncscroll) == 1} {
+        eval vscroll-sync {{}} 2 [$w(NegText) yview]
+    }
+}
+
+###############################################################################
+# show the popup menu, optionally changing some of the entries based on
+# where the user clicked
+###############################################################################
+proc show-popupMenu {x y} {
+    global w
+    global g
+
+    set window [winfo containing $x $y]
+    if {[winfo class $window] == "Text"} {
+        $w(popupMenu) entryconfigure "Find..." -state normal
+        $w(popupMenu) entryconfigure "Find Nearest*" -state normal
+
+        if {$window == $w(PosText) || $window == $w(PosInfo) || $window == \
+          $w(PosCB)} {
+            $w(popupMenu) configure -title "Pos File"
+            set g(activeWindow) $w(PosText)
+        } else {
+            $w(popupMenu) configure -title "Neg File"
+            set g(activeWindow) $w(NegText)
+        }
+    } else {
+        $w(popupMenu) entryconfigure "Find..." -state disabled
+        $w(popupMenu) entryconfigure "Find Nearest*" -state disabled
+    }
+    tk_popup $w(popupMenu) $x $y
+}
+
+###############################################################################
+# build the right-click popup menu
+###############################################################################
+proc build-popupMenu {} {
+    debug-info "build-popupMenu"
+    global w g
+
+    # this routine assumes the other windows already exist...
+    menu $w(popupMenu)
+    foreach win [list PosText NegText PosInfo NegInfo PosCB NegCB] {
+        bind $w($win) <3> {show-popupMenu %X %Y}
+    }
+
+    set m $w(popupMenu)
+    $m add command -label "First Match" -underline 0 -command [list popupMenu-cmd \
+      first] -accelerator "f"
+    $m add command -label "Previous Match" -underline 0 -command \
+      [list popupMenu-cmd previous] -accelerator "p"
+    $m add command -label "Next Match" -underline 0 -command [list popupMenu-cmd \
+      next] -accelerator "n"
+    $m add command -label "Last Match" -underline 0 -command [list popupMenu-cmd \
+      last] -accelerator "l"
+    $m add separator
+    $m add command -label "Find Nearest Match" -underline 0 -command \
+      [list popupMenu-cmd nearest] -accelerator "Double-Click"
+    $m add separator
+    $m add command -label "Find..." -underline 0 -command [list popupMenu-cmd find]
+}
+
+###############################################################################
+# handle popup menu commands
+###############################################################################
+proc popupMenu-cmd {command args} {
+    debug-info "popupMenu ($command $args)"
+    global g
+    global w
+
+    switch -- $command {
+    find {
+            do-find
+        }
+    first {
+            move first
+        }
+    last {
+            move last
+        }
+    next {
+            move 1
+        }
+    previous {
+            move -1
+        }
+    nearest {
+            moveNearest $g(activeWindow) xy [winfo pointerx $g(activeWindow)] \
+              [winfo pointery $g(activeWindow)]
+        }
+    }
+}
+#
+# Resize the text windows relative to each other.  The 8.4 method works
+# much better.
+proc pane_drag {win x} {
+    global w
+    global tk_version
+
+    set relX [expr $x - [winfo rootx $win]]
+    set maxX [winfo width $win]
+    set frac [expr int((double($relX) / $maxX) * 100)]
+    if {$frac < 5} { set frac 5 }
+    if {$frac > 95} { set frac 95 }
+    set L $frac
+    set R [expr 100 - $frac]
+    grid columnconfigure $win 0 -weight $L
+    grid columnconfigure $win 2 -weight $R
+}
+
+###############################################################################
+# build the main client window (the text widgets, scrollbars, that
+# sort of fluff)
+###############################################################################
+proc build-client {} {
+    debug-info "build-client"
+    global g
+    global w
+    global opts
+    global map
+    global tk_version
+    global colorins colorschg colordel
+    set colordel Tomato
+    set colorins PaleGreen
+    set colorchg DodgerBlue
+
+    frame $w(client) -bd 2 -relief flat
+
+    # Text  - holds the sequences files
+    # Info  - sort-of "invisible" text widget which is kept in sync
+    #              with the text widget and holds line numbers
+    # CB    - contains changebars or status or something like that...
+    # VSB   - vertical scrollbar
+    # HSB   - horizontal scrollbar
+    # Label - label to hold the name of the file
+    set w(PosText) $w(client).left.text
+    set w(PosInfo) $w(client).left.info
+    set w(PosCB) $w(client).left.changeBars
+    set w(PosVSB) $w(client).left.vsb
+    set w(PosHSB) $w(client).left.hsb
+    set w(PosLabel) $w(client).leftlabel
+
+
+    set w(NegText) $w(client).right.text
+    set w(NegInfo) $w(client).right.info
+    set w(NegCB) $w(client).right.changeBars
+    set w(NegVSB) $w(client).right.vsb
+    set w(NegHSB) $w(client).right.hsb
+    set w(NegLabel) $w(client).rightlabel
+
+    set w(BottomText) $w(client).bottomtext
+
+    # these don't need to be global...
+    set leftFrame $w(client).left
+    set rightFrame $w(client).right
+
+    # we'll create each widget twice; once for the left side
+    # and once for the right.
+    debug-info "  Assigning labels to headers"
+    scan $opts(geometry) "%dx%d" width height
+    label $w(PosLabel) -bd 1 -relief flat -textvariable data(fpos) -width $width
+    label $w(NegLabel) -bd 1 -relief flat -textvariable data(fneg) -width $width
+
+    # this holds the text widgets and the scrollbars. The reason
+    # for the frame is purely for aesthetics. 
+    frame $leftFrame -bd 1 -relief sunken
+    frame $rightFrame -bd 1 -relief sunken
+
+    scrollbar $w(PosHSB) -borderwidth 1 -orient horizontal -command \
+      [list $w(PosText) xview]
+
+    scrollbar $w(NegHSB) -borderwidth 1 -orient horizontal -command \
+      [list $w(NegText) xview]
+
+    scrollbar $w(PosVSB) -borderwidth 1 -orient vertical -command \
+      [list $w(PosText) yview]
+
+    scrollbar $w(NegVSB) -borderwidth 1 -orient vertical -command \
+      [list $w(NegText) yview]
+
+
+    text $w(PosText) -padx 0 -wrap none -width $width -height $height \
+      -borderwidth 0 -setgrid 1 -yscrollcommand [list vscroll-sync \
+      "$w(PosInfo) $w(PosCB)" 1] -xscrollcommand [list hscroll-sync 1]
+
+    text $w(NegText) -padx 0 -wrap none -width $width -height $height \
+      -borderwidth 0 -setgrid 1 -yscrollcommand [list vscroll-sync \
+      "$w(NegInfo) $w(NegCB)" 2] -xscrollcommand [list hscroll-sync 2]
+
+    text $w(PosInfo) -height 0 -padx 0 -width 6 -borderwidth 0 -setgrid 1 \
+      -yscrollcommand [list vscroll-sync "$w(PosCB) $w(PosText)" 1]
+
+    text $w(NegInfo) -height 0 -padx 0 -width 6 -borderwidth 0 -setgrid 1 \
+      -yscrollcommand [list vscroll-sync "$w(NegCB) $w(NegText)" 2]
+
+    # each and every line in a text window will have a corresponding line
+    # in this widget. 
+    # The lines with a matched pattern will have a +
+    text $w(PosCB) -height 0 -padx 0 -highlightthickness 0 -wrap none \
+      -foreground white -width 1 -borderwidth 0 -yscrollcommand \
+      [list vscroll-sync "$w(PosInfo) $w(PosText)" 1]
+
+    text $w(NegCB) -height 0 -padx 0 -highlightthickness 0 -wrap none \
+      -background white -foreground white -width 1 -borderwidth 0 \
+      -yscrollcommand [list vscroll-sync "$w(NegInfo) $w(NegText)" 2]
+
+    # this widget is used to show the patterns
+    text $w(BottomText) -wrap none -borderwidth 1 -height 10 -width 0
+    
+    # Set up text tags for the 'current match' (the one chosen by the 'next'
+    # and 'prev' buttons) and any ol' diff region.  All match regions are
+    # given the 'match' tag initially...  As 'next' and 'prev' are pressed,
+    # to scroll through the matches, one particular match region is
+    # always chosen as the 'current match', and is set off from the others
+    # via the 'match' tag -- in particular, so that it's obvious which matches
+    # in the left and right-hand text widgets match.
+
+    foreach widget [list $w(PosText) $w(PosInfo) $w(PosCB) $w(NegText) \
+      $w(NegInfo) $w(NegCB) $w(BottomText)] {
+        eval "$widget configure $opts(textopt)"
+        foreach tag {matchtag currtag inlinetag matchantag } {
+            eval "$widget tag configure $tag $opts($tag)"
+        }
+    }
+
+    # adjust the tag priorities a bit...
+    foreach window [list PosText NegText PosCB NegCB PosInfo NegInfo] {
+        $w($window) tag raise matchtag
+	$w($window) tag raise matchantag
+        $w($window) tag raise currtag
+        $w($window) tag raise inlinetag
+    }
+
+    # these tags are specific to change bars
+    foreach widget [list $w(PosCB) $w(NegCB)] {
+        eval "$widget tag configure + $opts(+)"
+    }
+
+    # this is a grip for resizing the sides relative to each other.
+    button $w(client).grip -borderwidth 3 -relief raised \
+      -cursor sb_h_double_arrow
+# -image resize
+    bind $w(client).grip <B1-Motion> {pane_drag $w(client) %X}
+
+    # use grid to manage the widgets in the left side frame
+    grid $w(PosVSB) -row 0 -column 0 -sticky ns
+    grid $w(PosInfo) -row 0 -column 1 -sticky nsew
+    grid $w(PosCB) -row 0 -column 2 -sticky ns
+    grid $w(PosText) -row 0 -column 3 -sticky nsew
+    grid $w(PosHSB) -row 1 -column 1 -sticky ew -columnspan 3
+
+    grid rowconfigure $leftFrame 0 -weight 1
+    grid rowconfigure $leftFrame 1 -weight 0
+
+    grid columnconfigure $leftFrame 0 -weight 0
+    grid columnconfigure $leftFrame 1 -weight 0
+    grid columnconfigure $leftFrame 2 -weight 0
+    grid columnconfigure $leftFrame 3 -weight 1
+
+    # likewise for the right...
+    grid $w(NegVSB) -row 0 -column 3 -sticky ns
+    grid $w(NegInfo) -row 0 -column 0 -sticky nsew
+    grid $w(NegCB) -row 0 -column 1 -sticky ns
+    grid $w(NegText) -row 0 -column 2 -sticky nsew
+    grid $w(NegHSB) -row 1 -column 0 -sticky ew -columnspan 3
+
+    grid rowconfigure $rightFrame 0 -weight 1
+    grid rowconfigure $rightFrame 1 -weight 0
+
+    grid columnconfigure $rightFrame 0 -weight 0
+    grid columnconfigure $rightFrame 1 -weight 0
+    grid columnconfigure $rightFrame 2 -weight 1
+    grid columnconfigure $rightFrame 3 -weight 0
+
+    # use grid to manage the labels, frames and map. We're going to
+    # toss in an extra row just for the benefit of our dummy frame.
+    # the intent is that the dummy frame will match the height of
+    # the horizontal scrollbars so the map stops at the right place...
+    grid $w(PosLabel) -row 0 -column 0 -sticky ew
+    grid $w(NegLabel) -row 0 -column 2 -sticky ew
+    grid $leftFrame -row 1 -column 0 -sticky nsew -rowspan 2
+#    grid $map -row 1 -column 1 -stick ns
+    grid $w(client).grip -row 2 -column 1
+    grid $rightFrame -row 1 -column 2 -sticky nsew -rowspan 2
+
+    grid rowconfigure $w(client) 0 -weight 0
+    grid rowconfigure $w(client) 1 -weight 1
+    grid rowconfigure $w(client) 2 -weight 0
+    grid rowconfigure $w(client) 3 -weight 0
+
+    
+    grid columnconfigure $w(client) 0 -weight 100 -uniform a
+    grid columnconfigure $w(client) 2 -weight 100 -uniform a
+
+    grid columnconfigure $w(client) 1 -weight 0
+
+    # this adjusts the variable g(activeWindow) to be whatever text
+    # widget has the focus...
+    bind $w(PosText) <1> {set g(activeWindow) $w(PosText)}
+    bind $w(NegText) <1> {set g(activeWindow) $w(NegText)}
+
+    set g(activeWindow) $w(PosText) ;# establish a default
+
+#    rename $w(NegText) $w(NegText)_
+#    rename $w(PosText) $w(PosText)_
+
+#    proc $w(NegText) {command args} $::text_widget_proc
+#    proc $w(PosText) {command args} $::text_widget_proc
+}
+
+
+
+###############################################################################
+# Build the menu bar
+###############################################################################
+proc build-menubar {} {
+    debug-info "build-menubar"
+    global g
+    global opts
+    global w
+
+    menu $w(menubar)
+
+    # this is just temporary shorthand ...
+    set menubar $w(menubar)
+
+    # First, the menu buttons...
+    set fileMenu $w(menubar).file
+    set viewMenu $w(menubar).view
+    set helpMenu $w(menubar).help
+    set editMenu $w(menubar).edit
+#    set mergeMenu $w(menubar).window
+#    set markMenu $w(menubar).marks
+
+    $w(menubar) add cascade -label "File" -menu $fileMenu -underline 0
+    $w(menubar) add cascade -label "Edit" -menu $editMenu -underline 0
+    $w(menubar) add cascade -label "View" -menu $viewMenu -underline 0
+    $w(menubar) add cascade -label "Help" -menu $helpMenu -underline 0
+
+    set w(fileMenu) $fileMenu
+    set w(helpMenu) $helpMenu
+    set w(editMenu) $editMenu
+    set w(viewMenu) $viewMenu
+
+    # File menu...
+    menu $fileMenu
+    $fileMenu add command -label "New Run..." -underline 0 -command {do-new-run}
+    $fileMenu add command -label "Load pat file..." -underline 0 -command {do-load_patfile}
+    $fileMenu add separator
+#    $fileMenu add command -label "Rerun" -underline 0 \
+#      -accelerator r -command rerun-coubs
+#    $fileMenu add command -label "Write Report..." -command \
+#      [list write-report popup] -underline 0
+#    $fileMenu add separator
+    $fileMenu add command -label "Exit" -underline 1 -accelerator q \
+      -command do-exit
+
+    # Edit menu...  If you change, add or remove labels, be sure and
+    # update the tooltips.
+    menu $editMenu
+    $editMenu add command -label "Copy" -underline 0 -command do-copy
+    $editMenu add separator
+    $editMenu add separator
+    $editMenu add command -label "Preferences..." -underline 0 \
+      -command customize
+
+    set "g(tooltip,Copy)" "Copy the currently selected text to the clipboard"
+    set "g(tooltip,Preferences...)" "Pop up a window to customize $g(name)"
+
+    # View menu...  If you change, add or remove labels, be sure and
+    # update the tooltips.
+    menu $viewMenu
+
+    $viewMenu add checkbutton -label "Show Sequence Numbers" -underline 12 \
+      -selectcolor $w(selcolor) -variable opts(showln) \
+      -command toogle-show-linenumbers
+
+    $viewMenu add checkbutton -label "Show Aligned Pos." -underline 12 \
+      -selectcolor $w(selcolor) -variable opts(showaln_fpos) \
+	-command "toogle-show-align fpos"
+
+    $viewMenu add checkbutton -label "Show Aligned Neg." -underline 12 \
+      -selectcolor $w(selcolor) -variable opts(showaln_fneg) \
+	-command "toogle-show-align fneg" 
+
+    $viewMenu add separator
+
+    $viewMenu add checkbutton -label "Synchronize Scrollbars" -underline 0 \
+      -selectcolor $w(selcolor) -variable opts(syncscroll)
+
+    $viewMenu add separator
+
+    $viewMenu add command -label "First Match" -underline 0 -command \
+      {move first} -accelerator "F"
+    $viewMenu add command -label "Previous Match" -underline 0 -command {move \
+      -1} -accelerator "P"
+    $viewMenu add command -label "Next Match" -underline 0 -command {move 1} \
+      -accelerator "N"
+    $viewMenu add command -label "Last Match" -underline 0 -command \
+      {move last} -accelerator "L"
+
+    set "g(tooltip,Show Sequence Numbers)" "If set, show sequence numbers beside each \
+       sequence of each file"
+    set "g(tooltip,Synchronize Scrollbars)" "If set, scrolling either window \
+       will scroll both windows"
+#    set "g(tooltip,Diff Map)" "If set, display the graphical \"Difference \
+#      Map\" in the center of the display"
+    set "g(tooltip,First Match)" "Go to the first difference"
+    set "g(tooltip,Last Match)" "Go to the last difference"
+    set "g(tooltip,Previous Match)" "Go to the diff record just prior to the \
+       current diff record"
+    set "g(tooltip,Next Match)" "Go to the diff record just after the current \
+       diff record"
+
+    # Help menu. If you change, add or remove labels, be sure and
+    # update the tooltips.
+    menu $helpMenu
+    $helpMenu add command -label "On GUI" -underline 3 -command about-win
+#    $helpMenu add command -label "On Command Line" -underline 3 \
+#      -command "do-usage gui"
+#    $helpMenu add command -label "On Preferences" -underline 3 \
+#      -command do-help-preferences
+#    $helpMenu add separator
+    $helpMenu add command -label "About $g(name)" -underline 0 -command about-win
+
+    bind $fileMenu <<MenuSelect>> {showTooltip menu %W}
+    bind $editMenu <<MenuSelect>> {showTooltip menu %W}
+    bind $viewMenu <<MenuSelect>> {showTooltip menu %W}
+    bind $helpMenu <<MenuSelect>> {showTooltip menu %W}
+
+    set "g(tooltip,On Preferences)" "Show help on the user-settable preferences"
+    set "g(tooltip,On GUI)" "Show help on how to use the Graphical User \
+      Interface"
+    set "g(tooltip,On Command Line)" "Show help on the command line arguments"
+    set "g(tooltip,About $g(name))" "Show information about this application"
+}
+
+image create photo nullImage
+
+###############################################################################
+# Show explanation of item in the status bar at the bottom.
+# Now used only for menu items
+###############################################################################
+proc showTooltip {which w} {
+    global tooltip
+    global g
+    switch -- $which {
+    menu {
+            if {[catch {$w entrycget active -label} label]} {
+                set label ""
+            }
+            if {[info exists g(tooltip,$label)]} {
+                set g(statusInfo) $g(tooltip,$label)
+            } else {
+                set g(statusInfo) $label
+            }
+            update idletasks
+        }
+    button {
+            if {[info exists g(tooltip,$w)]} {
+                set g(statusInfo) $g(tooltip,$w)
+            } else {
+                set g(statusInfo) ""
+            }
+            update idletasks
+        }
+    }
+}
+#
+#
+#
+proc build-status {} {
+    debug-info "build-status"
+    global w
+    global g
+
+    frame $w(status) -bd 0
+
+    set w(statusLabel) $w(status).label
+    set w(statusCurrent) $w(status).current
+
+    # MacOS has a resize handle in the bottom right which will sit
+    # on top of whatever is placed there. So, we'll add a little bit
+    # of whitespace there. It's harmless, so we'll do it on all of the
+    # platforms.
+    label $w(status).blank -image nullImage -width 16 -bd 1 -relief sunken
+
+    label $w(statusCurrent) -textvariable g(statusCurrent) -anchor e \
+      -width 14 -borderwidth 1 -relief sunken -padx 4 -pady 2
+    label $w(statusLabel) -textvariable g(statusInfo) -anchor w -width 1 \
+      -borderwidth 1 -relief sunken -pady 2
+    pack $w(status).blank -side right -fill y
+
+    pack $w(statusCurrent) -side right -fill y -expand n
+    pack $w(statusLabel) -side left -fill both -expand y
+}
+
+###############################################################################
+# Customize the display (among other things).
+# rewrite!!!
+###############################################################################
+proc customize {} {
+}
+###############################################################################
+# Text has scrolled, update scrollbars and synchronize windows
+###############################################################################
+proc hscroll-sync {id args} {
+    global g opts
+    global w
+
+    # If ignore_event is true, we've already taken care of scrolling.
+    # We're only interested in the first event.
+    if {$g(ignore_hevent,$id)} {
+        return
+    }
+    # Scrollbar sizes
+    set size1 [expr {[lindex [$w(PosText) xview] 1] - [lindex \
+      [$w(PosText) xview] 0]}]
+    set size2 [expr {[lindex [$w(NegText) xview] 1] - [lindex \
+      [$w(NegText) xview] 0]}]
+
+    if {$opts(syncscroll) || $id == 1} {
+        set start [lindex $args 0]
+
+        if {$id != 1} {
+            set start [expr {$start * $size2 / $size1}]
+        }
+        $w(PosHSB) set $start [expr {$start + $size1}]
+        $w(PosText) xview moveto $start
+        set g(ignore_hevent,1) 1
+    }
+    if {$opts(syncscroll) || $id == 2} {
+        set start [lindex $args 0]
+        if {$id != 2} {
+            set start [expr {$start * $size1 / $size2}]
+        }
+        $w(NegHSB) set $start [expr {$start + $size2}]
+        $w(NegText) xview moveto $start
+        set g(ignore_hevent,2) 1
+    }
+
+    # This forces all the event handlers for the view alterations
+    # above to trigger, and we lock out the recursive (redundant)
+    # events using ignore_event.
+    update idletasks
+
+    # Restore to normal
+    set g(ignore_hevent,1) 0
+    set g(ignore_hevent,2) 0
+}
+
+###############################################################################
+# Text has scrolled, update scrollbars and synchronize windows
+###############################################################################
+proc vscroll-sync {windowlist id y0 y1} {
+    global g opts
+    global w
+
+    if {$id == 1} {
+        $w(PosVSB) set $y0 $y1
+    } else {
+        $w(NegVSB) set $y0 $y1
+    }
+
+    # if syncing is disabled, we're done. This prevents a nasty
+    # set of recursive calls
+    if {[info exists g(disableSyncing)]} {
+        return
+    }
+
+    # set the flag; this makes sure we only get called once
+    set g(disableSyncing) 1
+
+    # scroll the other windows on the same side as this window
+    foreach window $windowlist {
+        $window yview moveto $y0
+    }
+
+    # if syncing is turned on, scroll other windows.
+    # Annoyingly, sometimes the *Text windows won't scroll properly,
+    # at least under windows. And I can't for the life of me figure
+    # out why. Maybe a bug in tk?
+    if {$opts(syncscroll)} {
+        if {$id == 1} {
+            $w(NegText) yview moveto $y0
+            $w(NegInfo) yview moveto $y0
+            $w(NegCB) yview moveto $y0
+            $w(NegVSB) set $y0 $y1
+        } else {
+            $w(PosText) yview moveto $y0
+            $w(PosInfo) yview moveto $y0
+            $w(PosCB) yview moveto $y0
+            $w(PosVSB) set $y0 $y1
+        }
+    }
+
+    # we apparently automatically process idle events after this
+    # proc is called. Once that is done we'll unset our flag
+    after idle {catch {unset g(disableSyncing)}}
+}
+
+
+
+###############################################################################
+
+proc update-display {} {
+    #debug-info "update-display"
+    global g
+    global w
+
+    #debug-info "  init_OK $g(initOK)"
+    #debug-info "  started $g(started)"
+    #if {!$g(started)} return
+
+    # update the status line
+    #update-status "$g(pos) of $g(count)"
+
+}
+
+###############################################################################
+# Wipe the slate clean...
+###############################################################################
+proc wipe {} {
+    debug-info "wipe"
+    global g
+
+#    set g(file) 
+    set g(pos) 0
+    set g(Poscount) 0
+    set g(Negcount) 0
+}
+
+###############################################################################
+# Wipe all data and all windows
+###############################################################################
+proc wipe-window {} {
+    debug-info "wipe-window"
+    global g
+    global w
+
+    wipe
+    foreach mod {Pos Neg} {
+        $w(${mod}Text) configure -state normal
+        $w(${mod}Text) tag remove matchtag 1.0 end
+        $w(${mod}Text) tag remove matchantag 1.0 end
+        $w(${mod}Text) tag remove currtag 1.0 end
+        $w(${mod}Text) tag remove inlinetag 1.0 end
+        $w(${mod}Text) delete 1.0 end
+
+        $w(${mod}Info) configure -state normal
+        $w(${mod}Info) delete 1.0 end
+        $w(${mod}CB) configure -state normal
+        $w(${mod}CB) delete 1.0 end
+    }
+
+    if {[string length $g(destroy)] > 0} {
+        eval $g(destroy)
+        set g(destroy) ""
+    }
+
+}
+
+
+###############################################################################
+# Put up some informational text.
+###############################################################################
+proc show-info {message} {
+    global g
+
+    set g(statusInfo) $message
+    debug-info "show-info: $message"
+    update idletasks
+}
+
+
+###############################################################################
+# Trace output, enabled by a global variable
+###############################################################################
+proc debug-info {message} {
+    global g
+
+    if {$g(debug)} {
+        puts "$message"
+    }
+}
+
+###############################################################################
+#
+###############################################################################
+proc load_fasta_file { filename widget data_key} {
+    global data
+
+    # clean data array
+    array unset data "$data_key,*"
+    $widget delete 1.0 end
+    #
+    show-info "Reading $filename..."
+    if {[catch {set hndl [open "$filename" r]}]} {
+	fatal-error "Failed to open file: $filename"
+	return 0
+    }
+    set linenum 1
+    while { ![eof $hndl] } {
+	set data("$data_key,$linenum")  "[gets $hndl]\n"
+	$widget insert end $data("$data_key,$linenum")
+	incr linenum
+    }
+    close $hndl
+    show-info "Reading $filename...done."
+    set data($data_key) $filename
+    return 1
+}
+#
+# Check if the sequences in a (flat) fasta file are unaligned
+#
+proc is_fastaflat_unaligned { fastafile } {
+    
+    set err ""
+    set res 1
+    catch { set res [exec bash -c "grep -v \">\" $fastafile | grep -c -m 1 -P \"(\\\-|\\\.)\" | head -n 1"]; set _ "" } err
+    puts "$res-$err"
+    if { $err!="" || $res==1 } {
+	fatal-error "$fastafile has alignment characters.\n$err"
+	return 0
+    }
+    return 1
+}
+#
+proc do_show_fasta {} {
+    debug-info "\nload fasta files"
+    global g
+    global opts
+    global finfo
+    global w
+    global data
+
+    if { [is_fastaflat_unaligned $data(fpos_fasta)] } {
+	load_fasta_file $data(fpos_fasta) $w(PosText) fpos
+    }
+    if { [is_fastaflat_unaligned $data(fneg_fasta)] } {
+	load_fasta_file $data(fneg_fasta) $w(NegText) fneg
+    }
+
+    # Mark up the two text widgets 
+    draw-line-numbers
+
+    $w(PosInfo) configure -state normal
+    $w(NegInfo) configure -state normal
+    $w(PosCB) configure -state normal
+    $w(NegCB) configure -state normal
+
+    # Prevent tampering in the line number widgets. The text
+    # widgets are already taken care of
+    $w(PosInfo) configure -state disabled
+    $w(NegInfo) configure -state disabled
+    $w(PosCB) configure -state disabled
+    $w(NegCB) configure -state disabled
+}
+
+
+###############################################################################
+# Check if error was thrown by us or unexpected
+###############################################################################
+proc check-error {result output} {
+    global g errorInfo
+
+    if {$result && $output != "Fatal"} {
+        error $result $errorInfo
+    }
+}
+
+
+###############################################################################
+# centers window w over parent
+###############################################################################
+proc centerWindow {w {size {}}} {
+    update
+    set parent .
+
+    if {[llength $size] > 0} {
+        set wWidth [lindex $size 0]
+        set wHeight [lindex $size 1]
+    } else {
+        set wWidth [winfo reqwidth $w]
+        set wHeight [winfo reqheight $w]
+    }
+
+    set pWidth [winfo reqwidth $parent]
+    set pHeight [winfo reqheight $parent]
+    set pX [winfo rootx $parent]
+    set pY [winfo rooty $parent]
+
+    set centerX [expr {$pX +($pWidth / 2)}]
+    set centerY [expr {$pY +($pHeight / 2)}]
+
+    set x [expr {$centerX -($wWidth / 2)}]
+    set y [expr {$centerY -($wHeight / 2)}]
+
+    if {[llength $size] > 0} {
+        wm geometry $w "=${wWidth}x${wHeight}+${x}+${y}"
+    } else {
+        wm geometry $w "=+${x}+${y}"
+    }
+    update
+}
+
+
+###############################################################################
+#
+#
+proc about-win {} {
+    global g
+
+    set title "About $g(name)"
+    set text {
+<hdr>$g(name) $g(version)</hdr>
+
+<itl>$g(name)</itl> is a Tcl/Tk front-end to <itl>sigdis</itl> for Unix.
+
+Copyright (C) 2008 by Nuno A. Fonseca
+nuno.fonseca@gmail.com
+
+<bld>This program is free software; you can redistribute it and/or modify it \
+      under the terms of the GNU General Public License as published by the \
+      Free Software Foundation; either version 2 of the License, or (at your \
+      option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT \
+      ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or \
+      FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License \
+      for more details.
+
+You should have received a copy of the GNU General Public License along with \
+      this program; if not, write to the Free Software Foundation, Inc., 59 \
+      Temple Place, Suite 330, Boston, MA 02111-1307 USA</bld>
+    }
+
+    set text [subst -nobackslashes -nocommands $text]
+#    do-text-info .about $title $text
+}
+
+
+##########################################################################
+# platform-specific stuff
+##########################################################################
+proc setAquaDialogStyle {toplevel} {
+    tk::unsupported::MacWindowStyle style $toplevel movableDBoxProc
+}
+# Most of this was stolen from the "CDE" package by D. J. Hagberg.
+# I dig a couple more things out of the palette. -dar
+proc get_cde_params {} {
+    global w
+
+    # Set defaults for all the necessary things
+    set bg [option get . background background]
+    set fg [option get . foreground foreground]
+    set guifont [option get . buttonFontList buttonFontList]
+    set txtfont [option get . FontSet FontSet]
+    set listfont [option get . textFontList textFontList]
+    set textbg $bg
+    set textfg $fg
+
+    # If any of these aren't set, I don't think we're in CDE after all
+    if {![string length $fg]} {
+        return 0
+    }
+    if {![string length $bg]} {
+        return 0
+    }
+    if {![string length $guifont]} {
+        return 0
+    }
+    if {![string length $txtfont]} {
+        return 0
+    }
+
+    set guifont [string trimright $guifont ":"]
+    set txtfont [string trimright $txtfont ":"]
+    set listfont [string trimright $txtfont ":"]
+    regsub {medium} $txtfont "bold" dlgfont
+
+    # They don't tell us the slightly darker color they use for the
+    # scrollbar backgrounds and graphics backgrounds, so we'll make
+    # one up.
+    set rgb_bg [winfo rgb . $bg]
+    set shadow [format #%02x%02x%02x [expr {(9*[lindex $rgb_bg 0]) /2560}] \
+      [expr {(9*[lindex $rgb_bg 1]) /2560}] [expr {(9*[lindex $rgb_bg 2]) \
+      /2560}]]
+
+    # If we can find the user's dt.resources file, we can find out the
+    # palette and background/foreground colors
+    set fh ""
+    set palette ""
+    set cur_rsrc ~/.dt/sessions/current/dt.resources
+    set hom_rsrc ~/.dt/sessions/home/dt.resources
+    if {[file readable $cur_rsrc] && [file readable $hom_rsrc]} {
+        if {[file mtime $cur_rsrc] > [file mtime $hom_rsrc]} {
+            if {[catch {open $cur_rsrc r} fh]} {
+                set fh ""
+            }
+        } else {
+            if {[catch {open $hom_rsrc r} fh]} {
+                set fh ""
+            }
+        }
+    } elseif {[file readable $cur_rsrc]} {
+        if {[catch {open $cur_rsrc r} fh]} {
+            set fh ""
+        }
+    } elseif {[file readable $hom_rsrc]} {
+        if {[catch {open $hom_rsrc r} fh]} {
+            set fh ""
+        }
+    }
+    if {[string length $fh]} {
+        set palf ""
+        while {[gets $fh ln] != -1} {
+            regexp "^\\*background:\[ \t]*(.*)\$" $ln nil textbg
+            regexp "^\\*foreground:\[ \t]*(.*)\$" $ln nil textbg
+            regexp "^\\*0\\*ColorPalette:\[ \t]*(.*)\$" $ln nil palette
+            regexp "^Window.Color.Background:\[ \t]*(.*)\$" $ln nil textbg
+            regexp "^Window.Color.Foreground:\[ \t]*(.*)\$" $ln nil textfg
+        }
+        catch {close $fh}
+        #
+        # If the *0*ColorPalette setting was found above, try to find the
+        # indicated file in ~/.dt, $DTHOME, or /usr/dt.
+        #
+        if {[string length $palette]} {
+            foreach dtdir {/usr/dt /etc/dt ~/.dt} {
+                # This uses the last palette that we find
+                if {[file readable [file join $dtdir palettes $palette]]} {
+                    set palf [file join $dtdir palettes $palette]
+                }
+            }
+            # debug-info "Using palette $palf"
+            if {[string length $palf]} {
+                if {![catch {open $palf r} fh]} {
+                    gets $fh activetitle
+                    gets $fh inactivetitle
+                    gets $fh wkspc1
+                    gets $fh textbg
+                    gets $fh guibg ;#(*.background) - default for tk under cde
+                    gets $fh menubg
+                    gets $fh wkspc4
+                    gets $fh iconbg ;#control panel bg too
+                    close $fh
+
+                    option add *Entry.highlightColor $activetitle userDefault
+                    option add *selectColor $activetitle userDefault
+                    option add *Text.highlightColor $wkspc4 userDefault
+                    option add *Dialog.Background $menubg userDefault
+                    option add *Menu.Background $menubg userDefault
+                    option add *Menubutton.Background $menubg userDefault
+                    option add *Menu.activeBackground $menubg userDefault
+                    option add *Menubutton.activeBackground $menubg userDefault
+                    set w(selcolor) $activetitle
+                }
+            }
+        }
+    } else {
+        puts stderr "Neither ~/.dt/sessions/current/dt.resources nor"
+        puts stderr "        ~/.dt/sessions/home/dt.resources was readable"
+        puts stderr "   Falling back to plain X"
+        return 0
+    }
+
+    #option add *Button.font $guifont userDefault
+    #option add *Label.font $guifont userDefault
+    #option add *Menu.font $guifont userDefault
+    #option add *Menubutton.font $guifont userDefault
+    #option add *Dialog.msg.font $dlgfont userDefault
+
+    option add *Text.Background $textbg userDefault
+    option add *Entry.Background $textbg userDefault
+    option add *Text.Foreground $textfg userDefault
+    option add *Entry.Foreground $textfg userDefault
+    option add *Button.activeBackground $bg userDefault
+    option add *Button.activeForeground $fg userDefault
+    option add *Scrollbar.activeBackground $bg userDefault
+    option add *Scrollbar.troughColor $shadow userDefault
+    option add *Canvas.Background $shadow userDefault
+
+    # These menu configs work if you use native menus.
+    option add *Menu.borderWidth 1 userDefault
+    option add *Menu.activeForeground $fg userDefault
+    option add *Menubutton.activeForeground $fg userDefault
+
+    # This draws a thin border around buttons
+    #option add *highlightBackground $bg userDefault
+    # Suppress the border
+    option add *HighlightThickness 0 userDefault
+    # Add it back for text and entry widgets
+    option add *Text.highlightBackground $bg userDefault
+    option add *Entry.highlightBackground $bg userDefault
+    option add *Text.HighlightThickness 2 userDefault
+    option add *Entry.HighlightThickness 1 userDefault
+
+    return 1
+}
+
+# Maybe this could be enhanced to get configs from themes and so on?
+# Neg now it just sets colors so everything isn't blinding white.
+proc get_aqua_params {} {
+    global w
+
+    # This doesn't seem to do anything?
+    set w(selcolor) lightsteelblue
+
+    # button highlightbackground has to be the same as background
+    # or else there are little white boxes around the button "pill"
+    option add *background #ebebeb userDefault
+    option add *Button.highlightBackground #ebebeb userDefault
+
+    option add *Entry.HighlightThickness 2 userDefault
+    option add *Entry.highlightBackground $w(selcolor) userDefault
+    #option add *Canvas.background #eeeeee userDefault
+    option add *Entry.background #ffffff userDefault
+    option add *Text.background white userDefault
+}
+
+###############################################################################
+
+###############################################################################
+# The "Startup" dialog
+###############################################################################
+proc newStartupDialog {} {
+    debug-info "new Run"
+    global g w
+    global finfo
+
+    set waitvar {}
+    set w(newStartupPopup) .newStartupPopup
+
+    if {[winfo exists $w(newStartupPopup)]} {
+        debug-info " $w(newStartupPopup) already exists, just centering"
+    } else {
+        debug-info " creating $w(newStartupPopup)"
+        toplevel $w(newStartupPopup)
+
+        wm group $w(newStartupPopup) .
+        # Won't start as the first window on Windows if it's transient
+        if {[winfo exists .client]} {
+            wm transient $w(newStartupPopup) .
+        }
+        wm title $w(newStartupPopup) "Coubs Setup"
+
+        if {$g(windowingSystem) == "aqua"} {
+            setAquaDialogStyle $w(newStartupPopup)
+        }
+
+        wm protocol $w(newStartupPopup) WM_DELETE_WINDOW {wm withdraw \
+            $w(newStartupPopup)}
+        wm withdraw $w(newStartupPopup)
+
+        set simple [frame $w(newStartupPopup).simple -borderwidth 2 -relief groove]
+
+        label $simple.l1 -text "Pos File (fasta):"
+        label $simple.l2 -text "Neg/control File (fasta):"
+        entry $simple.e1 -textvariable data(fpos_fasta)
+        entry $simple.e2 -textvariable data(fneg_fasta)
+
+        label $simple.lr1 -text "minpos"
+        label $simple.lr2 -text "maxneg"
+        entry $simple.er1 -textvariable data(minpos)
+        entry $simple.er2 -textvariable data(maxneg)
+
+        set w(newStartupPopup,entry1) $simple.e1
+        set w(newStartupPopup,entry2) $simple.e2
+
+        # we want these buttons to be the same height as
+        # the entry, so we'll try to force the issue...
+        button $simple.b1 -borderwidth 1 -highlightthickness 0 \
+          -text "Browse..." -command [list newStartupBrowse "Pos File" $simple.e1]
+        button $simple.b2 -borderwidth 1 -highlightthickness 0 \
+          -text "Browse..." -command [list newStartupBrowse "Neg/control file" $simple.e2]
+
+
+        # we'll use the grid geometry manager to get things lined up right...
+        grid $simple.l1 -row 0 -column 0 -sticky e
+        grid $simple.e1 -row 0 -column 1 -columnspan 4 -sticky nsew -pady 4
+        grid $simple.b1 -row 0 -column 5 -sticky nsew -padx 4 -pady 4
+
+        grid $simple.lr1 -row 1 -column 1
+        grid $simple.er1 -row 1 -column 2
+        grid $simple.lr2 -row 1 -column 3
+        grid $simple.er2 -row 1 -column 4
+
+        grid $simple.l2 -row 2 -column 0 -sticky e
+        grid $simple.e2 -row 2 -column 1 -columnspan 4 -sticky nsew -pady 4
+        grid $simple.b2 -row 2 -column 5 -sticky nsew -padx 4 -pady 4
+
+        grid columnconfigure $simple 0 -weight 0
+
+        set options [frame $w(newStartupPopup).options -borderwidth 2 \
+          -relief groove]
+
+        button $options.more -text "More" -command open-more-options
+
+        label $options.ml -text "%of data used for training"
+        entry $options.me -textvariable data(t)
+        label $options.al -text "Estimated homology"
+        entry $options.ae -textvariable data(e)
+        label $options.l1l -text "Output files prefix"
+        entry $options.l1e -textvariable data(prefix)
+#        label $options.l2l -text "Label for File 2"
+#        entry $options.l2e -textvariable finfo(userlbl,2)
+
+        grid $options.more -column 0 -row 0 -sticky nw
+        grid columnconfigure $options -0 -weight 0
+
+        # here are the buttons for this dialog...
+        set commands [frame $w(newStartupPopup).buttons]
+
+        button $commands.ok -text "Run" -width 5 -default active -command {
+	    set g(go) 1
+            set waitvar 1	    
+        }
+        button $commands.cancel -text "Cancel" -width 5 -default normal \
+          -command {
+            wm withdraw $w(newStartupPopup); set waitvar 0
+        }
+
+        pack $commands.ok $commands.cancel -side left -fill none -expand y \
+          -pady 4
+
+        catch {$commands.ok -default 1}
+
+        # pack this crud in...
+        pack $commands -side bottom -fill x -expand n
+        pack $simple -side top -fill both -ipady 20 -ipadx 20 -padx 5 -pady 5
+
+        pack $options -side top -fill both -ipady 5 -ipadx 5 -padx 5 -pady 5
+
+        bind $w(newStartupPopup) <Return> [list $commands.ok invoke]
+        bind $w(newStartupPopup) <Escape> [list $commands.cancel invoke]
+
+    }
+    if {[winfo exists .client]} {
+      centerWindow $w(newStartupPopup)
+    } else {
+      update
+    }
+    wm deiconify $w(newStartupPopup)
+    raise $w(newStartupPopup)
+    focus $w(newStartupPopup,entry1)
+    tkwait variable waitvar
+    wm withdraw $w(newStartupPopup)
+}
+
+proc open-more-options {} {
+    global w
+
+    grid $w(newStartupPopup).options.ml -row 0 -column 1 -sticky e
+    grid $w(newStartupPopup).options.me -row 0 -column 2 -sticky nsew -pady 4
+    grid $w(newStartupPopup).options.al -row 1 -column 1 -sticky e
+    grid $w(newStartupPopup).options.ae -row 1 -column 2 -sticky nsew -pady 4
+    grid $w(newStartupPopup).options.l1l -row 2 -column 1 -sticky e
+    grid $w(newStartupPopup).options.l1e -row 2 -column 2 -sticky nsew -pady 4
+
+
+    $w(newStartupPopup).options.more configure -text "Less" \
+      -command close-more-options
+    set x [winfo width $w(newStartupPopup)]
+    set y [winfo height $w(newStartupPopup)]
+    set yi [winfo reqheight $w(newStartupPopup).options]
+    set newy [expr $y + $yi]
+    if {[winfo exists .client]} {
+       centerWindow $w(newStartupPopup)
+    } else {
+       update
+    }
+}
+
+proc close-more-options {} {
+    global w
+    global finfo
+
+    grid remove $w(newStartupPopup).options.ml
+    grid remove $w(newStartupPopup).options.me
+    grid remove $w(newStartupPopup).options.al
+    grid remove $w(newStartupPopup).options.ae
+    grid remove $w(newStartupPopup).options.l1l
+    grid remove $w(newStartupPopup).options.l1e
+
+    $w(newStartupPopup).options.more configure -text "More" \
+      -command open-more-options
+}
+###############################################################################
+# File browser for the "StartupPopup" dialog
+###############################################################################
+proc newStartupBrowse {title widget} {
+    global w
+
+    set foo         [$widget get]
+    set initialdir  [file dirname $foo]
+    set initialfile [file tail $foo]
+    set filename    [tk_getOpenFile -title $title -initialfile $initialfile \
+		      -initialdir $initialdir -filetypes { {{Fasta Files} {.fasta}} }]
+    if {[string length $filename] > 0} {
+        $widget delete 0 end
+        $widget insert 0 $filename
+        $widget selection range 0 end
+        $widget xview end
+        focus $widget
+        return $filename
+    } else {
+        after idle {raise $w(newDiffPopup)}
+        return {}
+    }
+}
+
+###############################################################################
+# start a new run from the popup dialog
+###############################################################################
+proc do-new-run {} {
+    global g
+    global data
+    global finfo
+
+    debug-info "do-new-run"
+
+    # Pop up the dialog to collect the args
+    newStartupDialog
+
+    do_show_fasta
+    puts ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    # Put them together into a command
+    #if {[assemble-args] != 0} return
+
+    set g(disableSyncing) 1 ;# turn off syncing until things settle down
+
+    watch-cursor
+    # do the diff
+    do-coubs
+    # catch the patterns found
+    # TODO
+    # 
+    #move first 1 1
+
+    #debug-info "    ...restore-cursor from do-new-diff"
+    restore-cursor
+
+    update-display
+    catch {unset g(disableSyncing)}
+}
+
+###############################################################################
+# Process the arguments, whether from the command line or from the dialog
+###############################################################################
+proc assemble-args {} {
+    debug-info "assemble-args"
+    global finfo
+    global opts
+    global g
+    #TODO
+    # build the coubs cmdline
+    return 0
+}
+
+###############################################################################
+# Set the X cursor to "watch" for a window and all of its descendants.
+###############################################################################
+proc watch-cursor {args} {
+    debug-info "-> watch-cursor ($args)"
+    global current
+    global w
+
+    . configure -cursor watch
+    $w(PosText) configure -cursor watch
+    $w(NegText) configure -cursor watch
+    update idletasks
+}
+
+###############################################################################
+# Restore the X cursor for a window and all of its descendants.
+###############################################################################
+proc restore-cursor {args} {
+    debug-info "-> restore-cursor ($args)"
+    global current
+    global w
+
+    . configure -cursor {}
+    $w(PosText) configure -cursor {}
+    $w(NegText) configure -cursor {}
+    show-info ""
+    update idletasks
+}
+
+###############################################################################
+# Flash the "coubs" button and then kick off a run
+###############################################################################
+proc do-coubs {} {
+    debug-info "do-coubs"
+    global g finfo  errorInfo
+    global opts
+
+    wipe-window
+    update idletasks
+    set result [catch {
+        #assemble-args
+#        rediff
+#	load_files
+	# run coubs
+	
+    } output]
+
+    #debug-info "  result: $result   outptut: $output"
+    check-error $result $output
+    
+}
+
+###############################################################################
+# Get things going...
+###############################################################################
+proc main {} {
+    debug-info "main"
+    global w
+    global g errorInfo
+    global startupError
+    global opts
+    global waitvar
+
+    set cmd_empty 0
+
+    set cmd_empty [commandline]
+#    debug-info "  main: commandline returned $cmd_empty"
+    newStartupDialog
+    # If they cancel the dialog before doing any diffs, exit
+    if {[assemble-args] != 0} {
+	if {! [winfo exists .client]} {
+	    do-exit
+	}
+	# If the full UI is drawn, don't exit
+	return
+    }
+
+    wm withdraw .
+    wm protocol . WM_DELETE_WINDOW do-exit
+    wm title . "$g(name) $g(version)"
+
+    #
+    set g(started) 1
+    wipe
+    if {$g(windowingSystem) == "x11"} {
+        get_cde_params
+    }
+    if {$g(windowingSystem) == "aqua"} {
+        get_aqua_params
+    }
+
+    create-display
+    do_show_fasta
+    update
+    
+#    toogle-show-linenumbers 1
+    # run coubs
+    #highlight "IAAQLLA"
+    #highlight "\[KR\]S\[IL\]YGLKQ\[AS\]\[PS\]"
+
+#    move first 1 1
+    # this forces all of the various scrolling windows (line numbers,
+    # change bars, etc) to get in sync.
+    set yview [$w(NegText) yview]
+    vscroll-sync [list $w(NegInfo) $w(PosInfo)] 2 [lindex $yview 0] \
+      [lindex $yview 1]
+
+    wm deiconify .
+    update idletasks
+
+    if {[info exists startupError]} {
+        tk_messageBox -icon warning -type ok -title "$g(name) - Error in \
+          Startup File" -message $startupError
+    }
+}
+
+###############################################################################
+# Set up the display
+###############################################################################
+proc create-display {} {
+    debug-info "create-display"
+
+    global g opts bg tk_version
+    global w
+    global tmpopts
+
+    # these are the four major areas of the GUI:
+    # menubar - the menubar (duh)
+#    # toolbar - the toolbar (duh, again)
+    # client  - the area with the text widgets and the graphical map
+    # status us         - a bottom status line
+
+    # this block of destroys is only for stand-alone testing of
+    # the GUI code, and can be blown away (or not, if we want to
+    # be able to call this routine to recreate the display...)
+    catch {
+        destroy .menubar
+        destroy .client
+        destroy .status
+    }
+
+    # create the top level frames and store them in a global
+    # array..
+    set w(client)  .client
+    set w(menubar) .menubar
+    set w(status)  .status
+
+    # other random windows...
+    set w(preferences) .pref
+    set w(popupMenu)   .popupMenu
+
+    # now, simply build all the pieces
+    build-menubar
+    build-client
+    build-status
+    build-popupMenu
+
+    frame .separator1 -height 2 -borderwidth 2 -relief groove
+    frame .separator2 -height 2 -borderwidth 2 -relief groove
+
+    # ... and fit it all together...
+    . configure -menu $w(menubar)
+
+    pack .separator1 -side top -fill x -expand n
+
+    pack $w(client) -side top -fill both -expand y
+    pack .separator2 -side top -fill x -expand n
+
+    pack $w(status) -side bottom -fill x -expand n
+
+    # apply user preferences by calling the proc that gets
+    # called when the user presses "Apply" from the preferences
+    # window. That proc uses a global variable named "tmpopts"
+    # which should have the values from the dialog. Since we
+    # aren't using the dialog, we need to populate this array
+    # manually
+    foreach key [array names opts] {
+        set ::tmpopts($key) $opts($key)
+    }
+#    apply 0
+
+    #bind . <Destroy> {del-tmp}
+
+    # normally, keyboard traversal using tab and shift-tab isn't
+    # enabled for text widgets, since the default binding for these
+    # keys is to actually insert the tab character. Because all of
+    # our text widgets are for display only, let's redefine the
+    # default binding so the global <Tab> and <Shift-Tab> bindings
+    # are used.
+    bind Text <Tab> {continue}
+    bind Text <Shift-Tab> {continue}
+
+    # if the user toggles scrollbar syncing, we want to make sure
+    # they sync up immediately
+    trace variable opts(syncscroll) w toggleSyncScroll
+    wm deiconify .
+    focus -force $w(PosText)
+    update idletasks
+    # Need this to make the pane-resizing behave
+    grid propagate $w(client) f
+}
+
+###############################################################################
+# Read the commandline
+###############################################################################
+proc commandline {} {
+    debug-info "commandline"
+    global data
+    global argv
+    global argc
+    debug-info "  argv: $argv"
+    global finfo
+    global opts
+    global g
+
+    set g(initOK) 0
+    set argindex 0
+    set pths 0
+    # Loop through argv
+    while {$argindex < $argc} {
+        set arg [lindex $argv $argindex]
+        switch -regexp -- $arg {
+        "^-h" -
+        "^--help" {
+                do-usage cline
+                exit 0
+            }
+        "^-a.*" {
+                set g(ancfile) [string range $arg 2 end]
+            }
+        "^-v$" -
+        "^-r$" {
+                incr argindex
+                incr revs
+                set finfo(revs,$revs) [lindex $argv $argindex]
+            }
+        "^-v.*" -
+        "^-r.*" {
+                incr revs
+                set finfo(revs,$revs) [string range $arg 2 end]
+            }
+        "^-L$" {
+                incr argindex
+                incr lbls
+                set finfo(userlbl,$lbls) [lindex $argv $argindex]
+            }
+        "^-L.*" {
+                incr lbls
+                set finfo(userlbl,$lbls) [string range $arg 2 end]
+            }
+        "^-conflict$" {
+                set g(conflictset) 1
+            }
+        "^-p$" {
+                incr argindex
+                set data(fpos_fasta) [lindex $argv $argindex]
+            }
+        "^-n$" {
+                incr argindex
+                set data(fneg_fasta) [lindex $argv $argindex]
+            }
+        default {
+                incr pths
+                set finfo(pth,$pths) $arg
+                set finfo(f,$pths) $arg
+            }
+        }
+        incr argindex
+    }
+    return 0
+}
+
+
+proc highlight { pat  {style underline} } {
+    global data
+    global fposmatches
+    global fposcmatches
+    global fnegmatches
+    global fnegcmatches
+    global w
+    global colorins
+    global g    
+    global opts
+    global pref
+
+#    set pat [regsub -all "\\\[" "\\\\\[" $pat]
+    #    set pat [regsub -all "\\\]" "\\\\\]" $pat]
+    foreach f {fpos fneg} {
+#	array unset ${f}matches  $pat
+#	array unset ${f}cmatches $pat
+
+	set ${f}matches("$pat") {}
+	set ${f}cmatches("$pat") 0
+#/home/nf/Research/PosDOC/bin/pdx -y -p --seed=\"$pat\" -q $data($f) 2> /dev/null | grep \"position=\" 
+	set cmd "grep -n -h -o  \"$pat\" $data($f)"
+	puts $cmd
+	set err ""
+	catch { set res [exec bash -c "$cmd"] ; set _ "" } err
+	if { $err!="" } {
+	    puts stderr "Error: pdx invocation - $err"	    
+	} else {
+	    set lines [split $res "\n"]
+	    foreach l $lines {
+#		regexp "line=(\[0-9\]+) position=.(\[0-9\]+),(\[0-9\]+). " $l _ lnum startpos endpos
+		if { ![regexp "(\[0-9\]+):(\[A-Za-z\]+)" $l _ lnum word] } {
+		    puts stderr "regexp ERRO: $l"
+		}
+		lappend ${f}matches("$pat") [list $lnum $word]
+		incr ${f}cmatches("$pat")
+	    }
+	}
+    }
+    parray fposcmatches
+    parray fnegcmatches
+    parray fposmatches
+    parray fnegmatches
+        
+    # delete all known tags.
+    foreach window [list $w(PosText) $w(PosInfo) $w(PosCB) $w(NegText) \
+			$w(NegInfo) $w(NegCB)] {
+	eval $window tag delete [$window tag names]
+    }
+
+    # reconfigure all the tags based on the current options
+    # first, the common tags:
+    foreach tag {matchtag currtag inlinetag matchantag} {
+        foreach win [list $w(PosText) $w(PosInfo) $w(PosCB) $w(NegText) \
+          $w(NegInfo) $w(NegCB)] {
+            if {[catch "$win tag configure $tag $opts($tag)"]} {
+                do-error "Invalid settings for \"$pref($tag)\": \
+                \n\n'$opts($tag)' is not a valid option string."
+                eval "$win tag configure $tag $opts($tag)"
+                return
+            }
+        }
+    }
+
+    # next, changebar-specific tags
+    foreach widget [list $w(PosCB) $w(NegCB)] {
+        eval $widget tag configure + $opts(+)
+        eval $widget tag configure - $opts(-)
+    }
+    #    
+    foreach f {fpos fneg} {
+	# now, reapply the tags to all the matches
+	set prevline -1
+	foreach pair [set ${f}matches("$pat")] {
+	    set linenum [lindex $pair 0]
+	    set word [lindex $pair 1]
+	    set pat_len [string length "$word"]
+	    if { $linenum!=$prevline && [regexp -indices "$pat" $data("$f,$linenum") matches] } {
+		while { $matches!={} } {
+		    set start_pos [lindex $matches 0]
+		    set end_pos   [lindex $matches 1]
+		    set matches   [lreplace $matches 0 1]
+		    #puts $matches
+		    # start_col should start in 0
+		    set startcol $start_pos; set endcol [expr $startcol+$pat_len]
+		    if {$f == "fpos"} {
+			add-inline-tag $w(PosText) matchtag $linenum $startcol $endcol
+			add-inline-tag $w(PosText) matchantag  [expr $linenum-1] 0 end ;# mark the AN 
+		    } else {
+			add-inline-tag $w(NegText) matchtag $linenum $startcol $endcol
+			add-inline-tag $w(NegText) matchantag [expr $linenum-1] 0 end;# mark the AN 		    
+		    }
+		}
+	    }
+	    set prevline $linenum
+	}
+    }
+}
+###############################################################################
+# Add a tag to a region.
+###############################################################################
+proc add-tag {wgt tag start end } {
+    global g w
+
+    $wgt tag add $tag $start.0 [expr {$end + 1}].0
+
+    # make sure the sel tag has the highest priority
+    foreach window [list PosText NegText PosCB NegCB PosInfo NegInfo] {
+        $w($window) tag raise sel
+    }
+}
+
+proc add-inline-tag {wgt tag line startcol endcol} {
+    $wgt tag add $tag $line.$startcol $line.$endcol
+    $wgt tag raise $tag
+}
+################################################################
+# Coubs interaction
+###############################################################
+
+proc GetData {chan cmd} {
+    if {[gets $chan line] < 0} {
+	if {[eof $chan]} {
+	    close $chan
+	    return
+	}
+	# Could not read a complete line this time; Tcl’s
+	# internal buffering will hold the partial line for us
+	# until some more data is available over the socket.
+    } else {
+	$cmd $line
+    }
+}
+#fconfigure $chan -blocking 0
+#fileevent $chan readable [list GetData $chan]
+
+# Do alignment
+proc alignseqs { infile outfile } {
+    global opts
+        
+    update-status "Aligning"
+    show-info "Aligning $infile..."
+    if { [file exists $outfile] } {
+	show-info "$infile aligned already exists."
+	update-status "Ready"
+	return 1
+    }
+    set cmd "[subst -nobackslashes -nocommands $opts(seqalign_cmd)] -quicktree"
+    set err ""
+    debug-info "$cmd"
+    catch { set res [eval exec $cmd] ; set _ ""} err
+    if { $err!="" } {
+	debug-info "Alignment failed: $err"
+	show-info "Error aligning $infile."
+	update-status "Ready"
+	return 0
+    }
+    show-info "$infile aligned."
+    #converting file
+    show-info "Converting $infile..."
+    catch { set res [ exec bash -c "sed  s/%/>/ $outfile > $outfile.cl ; fasta2flat.pl $outfile.cl  > $outfile.tmp; mv $outfile.tmp $outfile"] ; set _ "" }
+    update-status "Ready"
+    return 1
+}
+#
+# Aligns the sequences
+#
+proc do_show_align { {key "fpos fneg"}} {
+    global data
+    global w
+    foreach k [split $key] {
+	set data(${k}_aln) "$data(${k}_fasta).aln"
+	if { [alignseqs $data(${k}_fasta) $data(${k}_aln)] } {
+	    if { $k=="fpos" } { set widget PosText
+	    } else { set widget NegText }
+	    load_fasta_file $data(${k}_aln) $w($widget) $k
+	    set g(showaln_${k}) 1	    
+	    
+	}
+    }
+}
+#
+#
+#
+proc toogle-show-align { key } {
+    global opts
+    if { $opts(showaln_$key) } {
+	do_show_align $key
+    }  else {
+	do_show_fasta $key
+    }
+}
+###############################################################
+#
+###############################################################
+proc load_pat_file { filename } {
+    global data
+    
+    # each line of the file contains the pattern, statistics and the seed
+    show-info "Reading $filename..."
+    if {[catch {set hndl [open "$filename" r]}]} {
+	fatal-error "Failed to open file: $filename"
+	return 0
+    }
+    array unset data "pat,*"
+    set linenum 0
+    while { ![eof $hndl] } {
+	
+	set line  [string trim [gets $hndl]]
+	if { $line!="" } {
+	    incr linenum
+	    set pat   [lindex $line 16]
+	    set seed  [lindex $line 17]
+	    set stats [lreplace $line 16 17]
+	    set data(pat,$linenum)  "$pat $seed $stats"
+	}
+    }
+    close $hndl
+    set data(npats) $linenum
+    show-info "Reading $filename...done."
+    return $linenum
+}
+
+proc do-load_patfile {} {
+    global g
+    global data
+    global finfo
+    global w
+
+    debug-info "do-load_patfile"
+    set title "Coubs' pattern file"
+    set foo         $w(newStartupPopup,entry1)
+    set initialdir  [file dirname $foo]
+    set initialfile [file tail $foo]
+    set filename    [tk_getOpenFile -title $title -initialfile $initialfile \
+		      -initialdir $initialdir -filetypes { {{Coubs pattern files} {.pat}} }]
+    if {[string length $filename] > 0 && [load_pat_file $filename] } {
+	set data(pat_file) $filename
+	show_pats
+	update-display
+        return $filename
+    } else {
+        return {}
+    }
+
+
+#    catch {unset g(disableSyncing)}
+}
+proc show_pats {} {
+    global opts w data g
+    set widget $w(BottomText)
+
+    debug-info "show-pats"
+    if {$data(pat_file)!=""} {
+	# configure the widget
+	$widget configure -height $data(npats)
+#        $widget configure -state disabled
+    debug-info "show-pats1"
+        # add all info	
+	for { set i 1 } { $i<=$data(npats) } {incr i} {
+	    debug-info "show-pats - $i"
+	    set d    [string trim $data(pat,$i)]
+	    set pat  [lindex $d 0]
+	    set seed [lindex $d 1]
+	    set pref "Pattern $i: "
+	    set pat_len  [string length $pat]
+	    set pref_len [string length $pref]
+	    $widget insert end  "$pref$pat $seed\n" l$i
+	    #Create bindings for tags.
+	    $widget tag bind l$i <Any-Enter> "$widget tag configure l$i $g(bold)"
+	    $widget tag bind l$i <Any-Leave> "$widget tag configure l$i $g(normal)"
+	    $widget tag bind l$i <1> [list highlight $pat]
+	}
+	# show the widget
+	grid $widget -row 5 -column 0 -sticky ew -columnspan 4	
+    } else {
+        grid forget $widget
+    }
+}
+
+###############################################################
+# run the main proc
+init_arrays
+########################################
+# 
+# Change to t for trace info on stderr
+set g(debug) t
+# set a couple o' globals that we might need sooner than later
+set g(name) "SigDis GUI"
+set g(version) "0.0.1"
+set g(started) 0
+
+
+# Work-around for bad font approximations,
+# as suggested by Don Libes (libes@nist.gov).
+catch {tk scaling [expr {100.0 / 72}]}
+
+init_win_setup
+main
+
