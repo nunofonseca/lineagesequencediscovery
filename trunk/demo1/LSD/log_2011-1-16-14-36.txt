@@ -1,0 +1,217 @@
+--------------------------------------------------------------------------------
+Program availability
+--------------------------------------------------------------------------------
+t_coffee: available
+sigdis: available
+meme: available
+--------------------------------------------------------------------------------
+/media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb 16 14:36:31 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-16-14-36/ && sigdis.pl -p "25714.pos.fasta" -n "25714.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 3 -i prot -v 2>&1
+Output:
+SigDis v0.3.
+wd -x -2 -v 0 -e 2.8 -m 3 -c 25714.pos.fasta.train.seq -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  -e 2.8 -n -p  > 25714.pos.fasta.words  2> /dev/null
++ - recall recall_neg prec f tpos tneg
+Killed
+cut: write error: Broken pipe
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb 16 14:36:57 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-16-14-36/ && sigdis.pl -p "25714.pos.fasta" -n "25714.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 5 -i prot -v 2>&1
+Output:
+SigDis v0.3.
+wd -x -2 -v 0 -e 2.8 -m 5 -c 25714.pos.fasta.train.seq -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  -e 2.8 -n -p  > 25714.pos.fasta.words  2> /dev/null
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Wed Feb 16 14:37:03 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-16-14-36/ && sigdis.pl -p "25714.pos.fasta" -n "25714.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 4 -i prot -v 2>&1
+Output:
+SigDis v0.3.
+wd -x -2 -v 0 -e 2.8 -m 4 -c 25714.pos.fasta.train.seq -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  -e 2.8 -n -p  > 25714.pos.fasta.words  2> /dev/null
++ - recall recall_neg prec f tpos tneg
+Killed
+cut: write error: Broken pipe
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb 16 14:37:56 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo1/sigdis/2011-1-16-14-37/ && sigdis.pl -p "25714.pos.fasta" -n "25714.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 4 -i prot -v 2>&1
+Output:
+SigDis v0.3.
+wd -x -2 -v 0 -e 2.8 -m 4 -c 25714.pos.fasta.train.seq -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  2> /dev/null
+wd -f 25714.pos.fasta.wd.conf  -e 2.8 -n -p  > 25714.pos.fasta.words  2> /dev/null
++ - recall recall_neg prec f tpos tneg
+cp: cannot stat `25714.pos.fasta.train': No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+grep: 25714.pos.fasta.train.tmp: No such file or directory
+cp: cannot stat `25714.neg.fasta.train': No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+grep: 25714.neg.fasta.train.tmp: No such file or directory
+
+--------------------------------------------------------------------------------
+

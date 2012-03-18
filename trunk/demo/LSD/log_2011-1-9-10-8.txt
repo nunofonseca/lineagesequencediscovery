@@ -1,0 +1,91 @@
+--------------------------------------------------------------------------------
+Program availability
+--------------------------------------------------------------------------------
+t_coffee: available
+sigdis: available
+meme: available
+--------------------------------------------------------------------------------
+/media/truecrypt1/Dropbox/IBMC_2010/LSD/demo
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+print() on closed filehandle $fh at Settings.pm line 69.
+--------------------------------------------------------------------------------
+Wed Feb  9 10:08:34 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo/sigdis/2011-1-9-10-8/ && sigdis.pl -p "5322.pos.fasta" -n "5322.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 3 -i prot -v 2>&1
+Output:
+SigDis v0.2.
+Sequences(+,-)=(15,15)
+Generating train/test files
+INFO: Converting 5322.pos.fasta.train to 5322.pos.fasta.train.seq...done. (7226 -> 7227)
+INFO: Converting 5322.neg.fasta.train to 5322.neg.fasta.train.seq...done. (3063 -> 3064)
+...5322.pos.fasta.train.seq: 8
+...5322.neg.fasta.train.seq: 8
+...5322.pos.fasta.test: 7
+...5322.neg.fasta.test: 7
+>Generating seeds...
+wd -x -2 -v 0 -e 2.8 -m 3 -c 5322.pos.fasta.train.seq -f 5322.pos.fasta.wd.conf  2> /dev/null<Generating seeds: 0
+ seeds
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.
+--------------------------------------------------------------------------------
+Wed Feb  9 10:08:47 2011
+--------------------------------------------------------------------------------
+Running command: cd /media/truecrypt1/Dropbox/IBMC_2010/LSD/demo/sigdis/2011-1-9-10-8/ && sigdis.pl -p "5322.pos.fasta" -n "5322.neg.fasta" --minpos 0.7000 --maxneg 0.3000 -e 0.5000 -t 0.5000 -l 10 -w 3 -i dna -v 2>&1
+Output:
+SigDis v0.2.
+Sequences(+,-)=(15,15)
+Generating train/test files
+INFO: Converting 5322.pos.fasta.train to 5322.pos.fasta.train.seq...done. (6993 -> 6994)
+INFO: Converting 5322.neg.fasta.train to 5322.neg.fasta.train.seq...done. (2788 -> 2789)
+...5322.pos.fasta.train.seq: 8
+...5322.neg.fasta.train.seq: 8
+...5322.pos.fasta.test: 7
+...5322.neg.fasta.test: 7
+>Generating seeds...
+wd -x -2 -v 0 -e 2.8 -m 3 -c 5322.pos.fasta.train.seq -f 5322.pos.fasta.wd.conf  2> /dev/null<Generating seeds: 0
+ seeds
+Info: Unable to find seeds with the given settings
+Info: You may try: 0.6 (instead of 0.7000) or/and...
+Info: you may try: 0.2 (instead of 0.3000) or/and...
+Info: you may try to decrease the expected similiarity: -e 0.45
+
+--------------------------------------------------------------------------------
+
+Gtk-CRITICAL **: IA__gtk_text_layout_get_iter_location: assertion `GTK_IS_TEXT_LAYOUT (layout)' failed at RunCommand.pm line 131.
+2011-02-09 10:08:54,168 DEBUG resources - Initializing resource locating
+2011-02-09 10:08:54,879 DEBUG Preferences - <value key='BibtexExtensions'> not found
+2011-02-09 10:08:54,970 DEBUG JobManager - Created JobManager instance 150183916
+2011-02-09 10:08:55,010 DEBUG GeditLaTeXPlugin - activate
+2011-02-09 10:08:55,011 DEBUG WindowContext - init
+2011-02-09 10:08:55,139 DEBUG GeditWindowDecorator - _init_tab_decorators: initialized 0 decorators
+2011-02-09 10:08:55,774 DEBUG GeditWindowDecorator - active_tab_changed
+2011-02-09 10:08:55,774 DEBUG GeditWindowDecorator - ---------- ADJUST: None
+2011-02-09 10:08:55,778 DEBUG GeditWindowDecorator - No window-scope views for this extension
+2011-02-09 10:08:55,779 DEBUG GeditWindowDecorator - _set_selected_bottom_view: 0
+2011-02-09 10:08:55,779 DEBUG GeditWindowDecorator - _set_selected_side_view: 1
+2011-02-09 10:08:55,789 DEBUG GeditWindowDecorator - tab_added
+2011-02-09 10:08:56,127 DEBUG GeditTabDecorator - loaded
+2011-02-09 10:08:56,221 DEBUG GeditTabDecorator - _adjust_editor: URI has changed
+2011-02-09 10:08:56,221 DEBUG GeditWindowDecorator - ---------- ADJUST: .txt
+2011-02-09 10:08:56,222 DEBUG GeditWindowDecorator - No window-scope views for this extension
+2011-02-09 10:08:56,222 DEBUG GeditWindowDecorator - _set_selected_bottom_view: 0
+2011-02-09 10:08:56,222 DEBUG GeditWindowDecorator - _set_selected_side_view: 1
+2011-02-09 10:08:58,426 DEBUG GeditTabDecorator - loaded
+2011-02-09 10:09:27,291 DEBUG GeditTabDecorator - loaded
+2011-02-09 10:09:29,271 DEBUG GeditWindowDecorator - tab_removed
+2011-02-09 10:09:29,290 DEBUG GeditLaTeXPlugin - deactivate
+sys:1: GtkWarning: IA__gtk_container_foreach: assertion `GTK_IS_CONTAINER (container)' failed
