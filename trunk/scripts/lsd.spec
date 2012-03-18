@@ -53,6 +53,7 @@ PERL5LIB=/opt/lineagesequencediscovery/:\$PERL5LIB perl /opt/lineagesequencedisc
 END
 
 chmod a+x $RPM_BUILD_ROOT/opt/lineagesequencediscovery/LSD
+chmod a+x $RPM_BUILD_ROOT/opt/lineagesequencediscovery/sigdis/*
 
 %files
 /opt/lineagesequencediscovery
